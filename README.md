@@ -50,7 +50,7 @@ These are extractions, not rewrites, and the extraction is what needed proving.
 
 `BreathEngine` was validated by differential fuzzing against a verbatim replica of the solver
 inside `BullsEthCRE`, the protocol it came from: byte-equal across thousands of runs, with
-one documented boundary difference at exact equality. That reference contract carries 425
+one documented boundary difference at exact equality. That reference contract carries 432
 tests and a nine-property invariant campaign covering clean seasons, emergency resets,
 dormancy wind-downs and circuit-breaker recovery.
 
