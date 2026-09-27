@@ -3,7 +3,7 @@
 In my own words, because the code can show what the seed and the breath do, but not where they
 came from.
 
-People play a lottery for three reasons, as I see it. The jackpot, and the dream that comes with
+From the research I did, people play a lottery for three reasons. The jackpot, and the dream that comes with
 it. The entertainment, the weekly ritual. And the odds, the sense that this week it could be you.
 The odds and the fun I could already give people. The harder question was how to make the jackpot
 bigger, the way a Powerball jackpot grows when it rolls.
