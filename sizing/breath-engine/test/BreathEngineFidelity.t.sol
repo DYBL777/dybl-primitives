@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 import {Test} from "forge-std/Test.sol";
-import {BreathEngine} from "../../src/lib/BreathEngineV13.sol";
+import {BreathEngine} from "../src/BreathEngine.sol";
 
-/// @dev FIDELITY: the library v1.3 vs a pure replica of BullsEthCRE v1.17's solver,
+/// @dev FIDELITY: the library vs a pure replica of BullsEthCRE v1.17's solver,
 ///      copied verbatim from _simGeomPot/_solveGeometricBps with events stripped and
 ///      SEED_BPS/rails passed as parameters. If the library is true to the game, the two
 ///      must agree everywhere except the single documented boundary (worstCase == floor).
@@ -102,7 +102,7 @@ contract BreathEngineFidelityTest is Test {
         }
     }
 
-    /// The v1.3 helper, both directions, deterministic.
+    /// isInsolvent(), both directions, deterministic.
     function test_IsInsolvent_BothDirections() public pure {
         assertTrue(BreathEngine.isInsolvent(100e6, 200e6, 5, 0, 0), "cannot reach 2x with no revenue");
         assertFalse(BreathEngine.isInsolvent(100e6, 100e6, 5, 0, 0), "at-floor with rate 0 is solvent");

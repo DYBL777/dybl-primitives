@@ -1,0 +1,13 @@
+[profile.default]
+# THE SAME COMPILER SETTINGS AS THE FIRST HOST THAT COMPILES THIS LIBRARY IN (Lettery Perpetual),
+# so the library tested here is the library that host carries. Breath is internal: each host
+# compiles its own copy, and the bytecode moves with every one of these settings.
+gas_limit = 90000000000
+src = "src"
+test = "test"
+libs = ["lib"]
+solc = "0.8.24"
+via_ir = true
+optimizer = true
+optimizer_runs = 200
+remappings = ["forge-std/=lib/forge-std/src/"]

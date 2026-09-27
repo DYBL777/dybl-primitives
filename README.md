@@ -1,99 +1,42 @@
 # DYBL primitives
 
-Trust infrastructure for pooled commitment. Small, auditable Solidity libraries extracted
-from a working protocol, each verified against the contract it came from.
+Protect it, grow it, pace it.
 
-Licensed under BUSL-1.1. Change Date 24 February 2030, converting to MIT. See LICENSE.
+Solidity libraries for games and savings products that hold a pot of money. One question runs
+through all of them: how to make the pot bigger, and then what a big pot should do. The seed
+decides how much of the pot is kept back; the sizing solvers decide what each draw pays.
 
----
+**Pre-testnet. Not deployed, not audited.** Each library's known limits are in its own
+KNOWN_ISSUES.md.
 
-## What is here
+Where the ideas came from is in [ORIGIN.md](ORIGIN.md). The library names are working names,
+open to change. Earlier posts called EternalSeed the Compounding Reserve and BreathEngine the
+Solvency Autopilot.
 
-| Primitive | Version | What it does |
-|---|---|---|
-| `BreathEngine.sol` | v1.4 | Autonomous forward-projecting distribution rate solver |
-| `EternalSeed.sol` | v1.7 | Capital retention: taxonomy and reference implementation |
+| Library     | Folder                                        | Answers                                  | First host        |
+|-------------|-----------------------------------------------|------------------------------------------|-------------------|
+| EternalSeed | [seed/eternal-seed](seed/eternal-seed)        | how much of the pot is kept back          | written into each game, not imported |
+| BreathEngine | [sizing/breath-engine](sizing/breath-engine)  | reach a floor by a deadline               | BullsEthCRE       |
+| Breath      | [sizing/breath](sizing/breath)                | what a game with no end date can afford   | Lettery Perpetual |
+| SeasonArc   | [sizing/season-arc](sizing/season-arc)        | a rising arc to the last draw             | Lettery TF        |
+| SeedGlide   | sizing/seed-glide (to come)                   | equal shares down to zero                 | SeedTogether      |
 
-Both are pure libraries. No state, no storage, no external calls, no dependencies.
+Each folder is its own Foundry project, built with the same compiler settings as its first host,
+so the library tested here is the one that host carries. To test one:
 
-## The problem BreathEngine solves
+    cd sizing/breath
+    forge install foundry-rs/forge-std@v1.16.2
+    forge test
 
-Any protocol that holds capital and owes something later faces the same question every
-period: **how much can I pay out now without failing my obligation at maturity?**
+## Licence
 
-Most protocols answer it with a fixed rate chosen at launch, or with governance votes after
-the fact. Neither adapts. A fixed rate is either too cautious in good conditions or
-insolvent in bad ones, and governance is too slow to be a control loop.
+The libraries are under the Business Source License 1.1 until 1 February 2030, when they become
+MIT. Until then you are free to read, audit, test, fork and build on them privately. Only a live
+deployment that takes other people's money needs a separate licence. The tests are MIT from day
+one.
 
-We call this the **Autonomous Distribution Rate Problem**, and to our knowledge no
-production protocol answers it autonomously and forward-projecting. `BreathEngine.solve()`
-does: given current stock, an obligation floor, periods remaining and an inflow estimate, it
-returns the maximum rate that still clears the floor at maturity. Twenty-four iterations of
-geometric binary search, every advance verified directly against the projection.
+The date is there to protect the work while it is young and unaudited, not to keep builders out.
+If you want to build on these primitives, or help take them forward, get in touch. The aim is a
+small team around them, and licence terms are part of that conversation.
 
-The distinction worth naming: streaming protocols move money at a rate you set. This solves
-for the rate.
-
-## The Eternal Seed
-
-A portion of capital retained and compounded rather than paid out. Two formulations, a floor
-on the pot (Formulation A) and a fraction of each period's pool (Formulation B), which
-compose into a seventeen-variant design space catalogued in the file's own documentation.
-`BreathEngine` is variant sixteen: Formulation B flow whose distribution side is
-solver-governed.
-
-The functions are one to three lines each. The value is the taxonomy.
-
-## How these were verified
-
-These are extractions, not rewrites, and the extraction is what needed proving.
-
-`BreathEngine` was validated by differential fuzzing against a verbatim replica of the solver
-inside `BullsEthCRE`, the protocol it came from: byte-equal across thousands of runs, with
-one documented boundary difference at exact equality. That reference contract carries 432
-tests and a nine-property invariant campaign covering clean seasons, emergency resets,
-dormancy wind-downs and circuit-breaker recovery.
-
-Both libraries have been through repeated audit rounds. Their changelogs record every
-finding, including the ones that turned out to be wrong, and including corrections to
-earlier corrections. The pattern is worth stating plainly: **across every round, every
-finding has been in the prose, never in the arithmetic.** The changelogs are cumulative and
-are the honest record, not a highlights reel.
-
-## Using them
-
-```solidity
-import {BreathEngine} from "dybl-primitives/src/BreathEngine.sol";
-
-uint256 rate = BreathEngine.solve(
-    stock,          // capital held now
-    floor,          // what must remain at maturity
-    periodsLeft,
-    revenueEMA,     // BreathEngine.updateEMA maintains this
-    seedBps,        // rollover fraction, 0 if unused
-    maxRateBps      // your ceiling
-);
-```
-
-Read the header of each file before integrating. Both carry porter notes covering the
-guards that look removable and are not, the ambiguity of a zero return, and the exact
-boundaries of every claim made about them.
-
-Internal libraries inline into the caller and add nothing to deployment beyond the code you
-actually use.
-
-## Repository layout
-
-```
-src/           the libraries
-test/          probe suites and the differential fidelity suite
-changelogs/    one cumulative changelog per primitive
-docs/          papers and specifications
-PROVENANCE.md  where each primitive came from
-```
-
-## Status
-
-Pre-audit. Not deployed. No production use is licensed before the Change Date.
-
-Contact: dybl7@proton.me
+Contact: dybl7@proton.me, or dybl777 on Discord.

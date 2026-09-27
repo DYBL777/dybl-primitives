@@ -4,10 +4,10 @@ PARAMETERS
 
 Licensor:             DYBL Foundation
 
-Licensed Work:        The libraries in this repository: every file under a src/ folder.
+Licensed Work:        The library under src/: EternalSeed.sol.
                       The Licensed Work is (c) 2026 DYBL Foundation.
 
-                      THE TESTS ARE NOT THE LICENSED WORK. Everything under a test/ folder is MIT
+                      THE TEST TREE IS NOT THE LICENSED WORK. Everything under test/ is MIT
                       and may be taken and used freely. The mechanism is what this licence
                       protects; the scaffolding around it is of more use to other people than
                       it is to anyone as an asset.

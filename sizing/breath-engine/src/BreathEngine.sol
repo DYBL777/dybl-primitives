@@ -2,7 +2,7 @@
 // Licensed under the Business Source License 1.1
 // Licensor:       DYBL Foundation
 // Licensed Work:  BreathEngine.sol
-// Change Date:    24 February 2030
+// Change Date:    1 February 2030
 // Change License: MIT
 
 pragma solidity ^0.8.24;
@@ -14,10 +14,10 @@ pragma solidity ^0.8.24;
  *
  *         The BreathEngine answers one question every period:
  *         "Given my current stock, my obligation floor, the periods remaining,
- *          and my estimated inflow per period -- what is the maximum rate I can
+ *          and my estimated inflow per period, what is the maximum rate I can
  *          safely distribute this period without breaching the floor at maturity?"
  *
- *         This question -- the Autonomous Distribution Rate Problem (ADRP) -- is
+ *         This question, the Autonomous Distribution Rate Problem (ADRP), is
  *         present in every DeFi protocol that holds funds and has obligations.
  *         To our knowledge, no production protocol answers it autonomously and
  *         forward-projecting. BreathEngine does.
@@ -26,28 +26,28 @@ pragma solidity ^0.8.24;
  *
  *         Five functions. No state. No storage reads. No dependencies.
  *
- *         `sim()`         -- Simulates pot evolution over N periods at a given rate.
+ *         `sim()`            Simulates pot evolution over N periods at a given rate.
  *                            Used internally by `solve()`. Internal like everything
  *                            here; hosts that want it callable for off-chain tooling
  *                            should expose it via a public wrapper function.
  *
- *         `solve()`       -- 24-iteration geometric binary search. Returns the maximum
+ *         `solve()`          24-iteration geometric binary search. Returns the maximum
  *                            safe distribution rate in BPS such that sim(stock, rate, N)
  *                            >= floor. Convergence guaranteed for maxBreathBps < 2^24
  *                            (~16.7M). IMPORTANT: solve() does NOT guarantee a nonzero
  *                            return. On structural insolvency it returns 0, and it can
  *                            also return 0 for a SOLVENT state with zero headroom. See
- *                            the L-01 host integration note and isInsolvent() below.
+ *                            the HOST INTEGRATION NOTE and isInsolvent() below.
  *
- *         `isInsolvent()` -- The insolvency predicate: true when even distributing
+ *         `isInsolvent()`    The insolvency predicate: true when even distributing
  *                            nothing cannot reach the floor. This is the test a host
  *                            must pair with a zero return from solve() before treating
- *                            it as distress. Added v1.3 (BE-L-01).
+ *                            it as distress.
  *
- *         `updateEMA()`   -- 3:1 weighted EMA for the caller's revenue estimate.
+ *         `updateEMA()`      3:1 weighted EMA for the caller's revenue estimate.
  *                            Caller maintains the state variable.
  *
- *         `potHealth()`   -- Returns stock as BPS of the obligation floor. Sentinel
+ *         `potHealth()`      Returns stock as BPS of the obligation floor. Sentinel
  *                            type(uint256).max when floor == 0.
  *
  * @dev    SUPPORTED INPUT DOMAIN
@@ -113,7 +113,7 @@ pragma solidity ^0.8.24;
  *         magnitudes are safe far beyond realistic inputs, but gas grows linearly
  *         with `periods` and is the binding constraint long before overflow is.
  *
- * @dev    L-01 HOST INTEGRATION NOTE: solve() can return 0, and zero is ambiguous
+ * @dev    HOST INTEGRATION NOTE: solve() can return 0, and zero is ambiguous
  *
  *         The original DYBL monolith solver pattern clamped its result to a
  *         breathRailMin rail and kept distributing minimal prizes even when the
@@ -150,8 +150,8 @@ pragma solidity ^0.8.24;
  *               emit SolverDistress(currentPeriod, stock, floor, periods);
  *           }
  *
- *         Testing `rate == 0` together with nonzero inputs (the pattern this note
- *         documented before v1.3) over-fires: it classifies case (e), a solvent
+ *         Testing `rate == 0` together with nonzero inputs (an earlier documented
+ *         pattern) over-fires: it classifies case (e), a solvent
  *         protocol at exactly its floor, as distress.
  *
  * @dev    BOUNDARY NOTE FOR PORTERS: exact equality is treated as solvent
@@ -168,86 +168,6 @@ pragma solidity ^0.8.24;
  *         Developed and hardened across repeated triple-audit passes within the DYBL suite:
  *         BullsEth, Lettery777, Weather32 1Y, Pick432 1Y, NearestTheETH,
  *         Lettery_Aave_1Y. Suite contracts are in pre-deployment audit hardening.
- *
- * @dev    CHANGELOG
- *
- *         v1.0 -- Initial extraction.
- *         v1.1 -- Audit findings resolved. M-01-NS: PROVEN IN
- *                 PRODUCTION rewritten. L-01: host integration pattern documented.
- *                 I-01: origin year corrected. I-02: potHealth() added to inventory.
- *                 I-03: convergence bound noted. I-04: em-dashes removed.
- *         v1.2 -- Audit findings resolved. revPerPeriod overflow bound
- *                 documented in OVERFLOW ANALYSIS section with realistic magnitude
- *                 argument. No code changes.
- *         v1.3 -- Audit findings resolved. ONE code change:
- *                 isInsolvent() helper added (BE-L-01) so hosts test distress against
- *                 the insolvency predicate instead of the ambiguous zero return; the
- *                 documented distress pattern updated accordingly, and the zero-return
- *                 meanings list gains (e) solvent-zero-headroom. NatSpec only
- *                 otherwise: SUPPORTED INPUT DOMAIN section added (BE-L-02 periods gas
- *                 hazard with measured figures; BE-I-04 maxBreathBps <= 10000 semantic
- *                 domain); L-01 note corrected -- BullsEth no longer clamps to
- *                 breathRailMin since v1.14 H-06, clamp described as the original
- *                 monolith pattern, porters directed to check their specific host
- *                 (NS-03); boundary-equality porter note added (BE-I-03); PROVEN IN
- *                 PRODUCTION heading renamed HARDENED ACROSS THE DYBL SUITE to match
- *                 its own body, and the "no production protocol in existence" absolute
- *                 softened to "to our knowledge" (BE-I-01); sim() inventory wording
- *                 changed from "expose publicly" to a host wrapper note, since library
- *                 internals cannot be exposed directly (BE-I-02). Pre-publication
- *                 amendments within v1.3: potHealth truncation note added, then
- *                 corrected to state that gate outcomes are unchanged for integer
- *                 thresholds (BE-I-06); audit-pass count reworded from an
- *                 unverifiable "seven" to "repeated" (RA-02, resolved by removal).
- *
- *         v1.4 -- NatSpec pass. No code changes, so the v1.3 fidelity
- *                 proof against the BullsEthCRE v1.17 solver carries forward unchanged.
- *                 BE-N-01. Problem: the `worstCase < floor` early return in solve()
- *                 reads as an optimisation and nothing recorded that removing it turns
- *                 an insolvent input from a zero return into an underflow revert.
- *                 Solution: porter note added naming it load-bearing.
- *                 BE-N-02. Problem: updateEMA() and potHealth() carried no param or
- *                 return tags while every other function had a full set. (Written
- *                 without the leading at-sign deliberately: a literal tag inside a
- *                 doc block is parsed as a real tag and fails the NatSpec check.)
- *                 Solution: tags added.
- *                 BE-N-03. Problem: OVERFLOW ANALYSIS covered the incremental
- *                 `endStock += revPerPeriod` but not the `revPerPeriod * periods`
- *                 multiplication in sim()'s seedBps >= BPS_DENOM early return.
- *                 Solution: third overflow site documented with its bound.
- *
- *                 Amendments landed within v1.4:
- *                 BE-N-04. Problem: BE-N-03's first wording claimed the early return
- *                 overflows at a lower threshold than the loop it replaces. False:
- *                 both revert on identical inputs, since a product overflow implies
- *                 the sum overflows and checked addition reaches the same total.
- *                 Solution: bound kept, mechanism corrected, revert sets stated equal.
- *                 BE-N-05. Problem: sim()'s early return is load-bearing in a second
- *                 undocumented way. Above BPS_DENOM the loop's subtraction underflows,
- *                 so the early return is what keeps those inputs total.
- *                 Solution: porter note added, scoped to periods >= 1.
- *                 BE-N-06. Problem: BE-N-01's revert claim read as universal.
- *                 Solution: scoped. It holds for every maxBreathBps <= 2^24 - 2; at
- *                 2^24 - 1 and above the iterations exhaust before mid reaches 0 and
- *                 a guardless search returns 0 without reverting.
- *                 BE-N-07. Problem: sim() called its truncation of `lost` conservative
- *                 and safe, which is the opposite direction. Solution: direction
- *                 corrected. Amended before publication after review: the first
- *                 correction said solve()'s floor guarantee can be missed by a few
- *                 wei, stated unconditionally. That is wrong within the library, where
- *                 the search verifies every candidate against sim() directly and the
- *                 guarantee is exact with respect to this model. The gap exists only
- *                 against a host whose real arithmetic differs from sim's single
- *                 floored step. Rewritten to scope it, with the measured figures now
- *                 carrying the parameters they were measured at, since figures without
- *                 their inputs cannot be reproduced.
- *                 BE-N-08. Problem: the input-domain section justified the 10000 limit
- *                 by asserting the trajectory is non-monotone in rate above 100%. That
- *                 was never demonstrated and a sweep to 40000 across many
- *                 configurations produced no non-monotone case; above the clamp
- *                 threshold sim flattens to revPerPeriod, which is monotone. Solution:
- *                 claim replaced with what is actually known, maximality unverified
- *                 outside the supported domain, restriction kept as caution.
  */
 library BreathEngine {
 
@@ -348,7 +268,7 @@ library BreathEngine {
      *         Convergence guaranteed for maxBreathBps < 2^24 (~16.7M BPS).
      *
      * @dev    24-iteration binary search with ceiling midpoint.
-     *         Returns 0 on structural insolvency (see L-01 host integration note).
+     *         Returns 0 on structural insolvency (see HOST INTEGRATION NOTE).
      *
      *         PORTERS: the `worstCase < floor` early return is load-bearing, not an
      *         optimisation. It is the only thing guaranteeing that the search never
@@ -411,7 +331,7 @@ library BreathEngine {
      * @notice True when the position is structurally insolvent: even distributing
      *         nothing for all remaining periods cannot reach the floor.
      *
-     * @dev    [v1.3 / BE-L-01] The predicate a host must pair with a zero return from
+     * @dev    The predicate a host must pair with a zero return from
      *         solve() before signalling distress. solve() returns 0 both on structural
      *         insolvency and on solvent-zero-headroom states (stock at exactly its
      *         floor with no revenue, for example); testing the rate alone over-fires.

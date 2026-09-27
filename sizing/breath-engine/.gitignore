@@ -1,0 +1,22 @@
+# Foundry
+out/
+cache/
+broadcast/
+
+# Dependencies, not vendored. forge-std is fetched with
+# `forge install foundry-rs/forge-std@v1.16.2`.
+lib/
+
+# Python
+__pycache__/
+*.pyc
+
+# Local environment
+.env
+.env.*
+
+# Editor and OS
+.DS_Store
+*.swp
+.idea/
+.vscode/

@@ -1,0 +1,16 @@
+[profile.default]
+# THE SAME COMPILER SETTINGS AS THE FIRST HOST THAT LINKS THIS LIBRARY (Lettery TF), so the
+# solver tested here is the solver that host deploys. A deployed library's address comes from
+# its exact bytecode, and the bytecode moves with every one of these settings.
+evm_version = "paris"
+src = "src"
+test = "test"
+libs = ["lib"]
+solc = "0.8.24"
+via_ir = true
+optimizer = true
+optimizer_runs = 1
+remappings = ["forge-std/=lib/forge-std/src/"]
+
+[fuzz]
+runs = 256

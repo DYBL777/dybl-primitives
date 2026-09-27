@@ -1,0 +1,15 @@
+[profile.default]
+# THE SAME COMPILER SETTINGS AS THE FIRST HOST (BullsEthCRE), whose solver this library is
+# tested against. BreathEngine is internal: each host compiles its own copy, and the bytecode
+# moves with every one of these settings.
+src = "src"
+test = "test"
+libs = ["lib"]
+solc = "0.8.24"
+via_ir = true
+optimizer = true
+optimizer_runs = 200
+remappings = ["forge-std/=lib/forge-std/src/"]
+
+[fuzz]
+runs = 2000
