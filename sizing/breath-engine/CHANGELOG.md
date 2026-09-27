@@ -17,6 +17,10 @@ the free 1 bps rate at exact equality. SOLUTION: four tests. Each fails against 
 broken library (an off-by-one solver, the insolvency guard removed, `potHealth()` rounding up).
 12 tests, all passing: 8 probes and a fidelity suite of 4, 3 of them fuzzing the library against
 a verbatim replica of the solver inside BullsEthCRE 1.17.
+PROBLEM: no test ran whole seasons of re-solving. SOLUTION: `test/Invariants.t.sol`, an invariant
+suite of random seasons checking that every rate holds the floor in the model, that a solvent
+season stays solvent and that it ends at or above its floor; a solver one basis point too high,
+or a projection that overstates income, fails it. `test/Proofs.t.sol` adds three Halmos proofs.
 
 **1.3** PROBLEM: `solve()` returns 0 both when the floor cannot be reached and when the state
 is solvent with no headroom (stock exactly at the floor with no income, for example), so a host

@@ -58,9 +58,15 @@ to show the tests catch them; Breath compiles to the same code as its first game
 BreathEngine's answers match its first game's solver across fuzzed inputs, except at one
 documented boundary. EternalSeed's tests also check each game's own seed line against it.
 
-**Not done yet.** No external audit and no test-network deployment. No formal verification, and
-no invariant suites that drive random sequences of calls; the fuzz tests cover single calls and
-simulated seasons.
+**Beyond single calls.** EternalSeed, Breath and BreathEngine each have an invariant suite: Foundry
+drives random sequences of draws, droughts and seasons and checks the library's rules after every
+call. Each suite was run against deliberately broken copies of its library to show it catches
+them. EternalSeed and BreathEngine also carry a few symbolic proofs, run with Halmos, for rules
+simple enough for the solver to prove for every input.
+
+**Not done yet.** No external audit and no test-network deployment. SeasonArc has fuzzed seasons
+but no invariant suite yet. No formal verification of the solvers' search or projection, which is
+too deep for the symbolic tools used here.
 
 ## Licence
 

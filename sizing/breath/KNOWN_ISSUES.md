@@ -40,5 +40,8 @@ each host rather than deployed once and linked. Two hosts built with different c
 carry different bytecode for the same source.
 
 **Coverage.** 20 library-level tests through a stand-in host. Mutation-checked: twelve deliberate
-breaks to the library, plus a reordering of the payout steps, each fail at least one test. Not
-audited. Not deployed.
+breaks to the library, plus a reordering of the payout steps, each fail at least one test. An
+invariant suite runs a minimal game through random sequences of draws, droughts and surges and
+checks after every draw that no payout exceeds the pot, no dust is paid, both rails hold and every
+unit is accounted for; removing the rise rail, the fall rail, the pot cap or the dust guard each
+fails it. Not audited. Not deployed.

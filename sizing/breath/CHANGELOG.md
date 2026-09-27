@@ -16,3 +16,6 @@ repository, every change to its logic included, is in Lettery Perpetual's CHANGE
   Comments rewritten to describe the library rather than its first host. One claim corrected: the
   library said only an empty pot may cut a payout harder than the fall rail, and the dust guard
   does too (a draw sized under minDraw pays nothing).
+  Tests added after publication, library unchanged: `test/Invariants.t.sol`, an invariant suite
+  driving a minimal game through random draws, droughts and surges; it checks the pot cap, the
+  dust guard, both rails and accounting after every draw.

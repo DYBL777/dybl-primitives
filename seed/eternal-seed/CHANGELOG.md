@@ -35,6 +35,13 @@ held pot paying above its income once built, a seeded pot growing bigger than an
 tracking each other at the same effective rate, and the invariant floor holding at the ceiling
 rate.
 
+**Problem:** the tests checked single calls and fixed seasons, not arbitrary sequences of draws.
+
+**Solution:** `test/Invariants.t.sol`, an invariant suite driving the stand-in game under Floor and
+Flow with random income, droughts and season lengths, checking accounting, the invariant floor,
+the pool limit and that the seed stays behind. Each fails against a deliberately broken library.
+`test/Proofs.t.sol` adds three symbolic proofs run with Halmos.
+
 **Problem:** each game writes its own line of the rule, and nothing checked that line against the
 reference.
 
