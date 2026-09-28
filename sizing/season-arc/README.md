@@ -79,12 +79,11 @@ an amount; the host decides how that amount is split and paid.
 ## Hosts
 
 **Lettery TF**, a weekly lottery with a fixed season, is the host this library was written for
-and the first to link it. Its history before this repository existed, every change to the solver
-included, is in Lettery TF's CHANGELOG.
-Where the seed and the breath behind it came from, in the author's words, is in Lettery TF's
-ORIGIN.md.
+and the first to link it. Its history before it was extracted, every change to the solver
+included, is in Lettery TF's CHANGELOG. Where the seed and the breath behind it came from, in the
+author's words, is in [ORIGIN.md](../../ORIGIN.md) at the root of the DYBL primitives repository.
 
-## Repository
+## Files
 
     src/SeasonArc.sol                 the library
     test/SeasonArc.t.sol              single calls against figures worked out by hand
@@ -93,9 +92,10 @@ ORIGIN.md.
     test/Sim.t.sol                    whole seasons called directly
     test/StandInGame.sol              the smallest game that can run a season on the library
     test/StandIn.t.sol                whole seasons through that game, including a fuzzed one
+    test/Invariants.t.sol             random runs of seasons, crowds and income, rules checked every draw
     sim/arc_fuzz.py                   the rule reimplemented in Python across random seasons
 
-On a fresh clone:
+From this folder, on a fresh clone:
 
     forge install foundry-rs/forge-std@v1.16.2
     forge test

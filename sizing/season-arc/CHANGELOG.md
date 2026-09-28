@@ -25,6 +25,14 @@ repository, every change to its logic included, is in Lettery TF's CHANGELOG up 
 
 ---
 
+**Tests added without a change to the library** (still 1.1.3): `test/Invariants.t.sol`, an
+  invariant suite running seasons of random length, opening and return shares through the
+  stand-in game, with crowds that arrive, leave or stop buying. After every draw it checks that no
+  draw pays more than the pot, the opening is its share, the arc never sizes down, an arc payment
+  leaves something for later, the closing draw empties the pot and every unit is accounted for.
+  A closing draw that keeps a sliver, an oversized opening, an arc that shrinks, or a removed
+  fallback each fails it.
+
 ## Comments and documentation
 
 Versions whose library instructions did not move. The compiler appends a hash of the source text
