@@ -25,11 +25,11 @@ every rate at deployment.
 horizon. It under-estimates when the pot is growing and over-estimates when it is shrinking, so it
 is for dashboards and calibration, not solvency decisions.
 
-**Coverage.** 26 tests. 14 check the functions' documented claims, 11 of them fuzzed at 2,000 runs;
+**Coverage.** 30 tests. 14 check the functions' documented claims, 11 of them fuzzed at 2,000 runs;
 seven deliberate breaks to the library each fail at least one of them. 6 run a stand-in game over
-ten years of weekly draws on flat income. 5 check the games' own lines. 1 invariant suite drives
-the stand-in game under both rules with random sequences of draws and droughts and checks five
-rules after every call. `test/Proofs.t.sol` holds three symbolic proofs, run with Halmos rather
+ten years of weekly draws on flat income. 5 check the games' own lines. 5 are invariants, checked
+after every call while the stand-in game runs random sequences of draws and droughts under both
+rules. `test/Proofs.t.sol` holds three symbolic proofs, run with Halmos rather
 than forge: Flow conserves the pool, the clamp at 100%, and headroom plus floor equals the pot.
 Claims that need the solver to reason through multiplication and division together did not finish
 in its time limit and rest on the fuzz and invariant tests. Not audited. Not deployed.

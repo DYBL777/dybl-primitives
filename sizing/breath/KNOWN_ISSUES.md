@@ -39,9 +39,9 @@ the fall rail would then hold the prize up after the extra payment had passed.
 each host rather than deployed once and linked. Two hosts built with different compiler settings
 carry different bytecode for the same source.
 
-**Coverage.** 20 library-level tests through a stand-in host. Mutation-checked: twelve deliberate
-breaks to the library, plus a reordering of the payout steps, each fail at least one test. An
-invariant suite runs a minimal game through random sequences of draws, droughts and surges and
-checks after every draw that no payout exceeds the pot, no dust is paid, both rails hold and every
-unit is accounted for; removing the rise rail, the fall rail, the pot cap or the dust guard each
-fails it. Not audited. Not deployed.
+**Coverage.** 25 library-level tests through a stand-in host. Mutation-checked: twelve deliberate
+breaks to the library, plus a reordering of the payout steps, each fail at least one of the first
+20. The other 5 are invariants, checked after every draw while a minimal game runs random
+sequences of draws, droughts and surges: no payout exceeds the pot, no dust is paid, both rails
+hold and every unit is accounted for. Removing the rise rail, the fall rail, the pot cap or the
+dust guard each fails them. Not audited. Not deployed.

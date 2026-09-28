@@ -35,12 +35,12 @@ compiler settings carry different bytecode for the same source.
 in BullsEthCRE 1.17. The host's prize structure is not final, and the settlement gap above is
 measured against that version.
 
-**Coverage.** 13 tests. 8 probe documented edge cases: fuzzing that `solve()` holds the floor and
+**Coverage.** 15 tests. 8 probe documented edge cases: fuzzing that `solve()` holds the floor and
 that one basis point more would breach it, that an insolvent input returns 0 without reverting,
 that `potHealth()` gates exactly as the true ratio would, and the rounding case at exact equality.
 4 form the fidelity suite, 3 of them fuzzing the library against a replica of BullsEthCRE 1.17's
 solver: they agree except at the one documented boundary, where paying nothing lands exactly on
-the floor. 1 invariant suite runs whole seasons, re-solving every period with income at or above
-the estimate, and checks that each rate holds the floor in the model, that a solvent season stays
-solvent and that it ends at or above its floor. `test/Proofs.t.sol` holds three symbolic proofs
+the floor. 3 are invariants, checked across random whole seasons that re-solve every period with
+income at or above the estimate: each rate holds the floor in the model, a solvent season stays
+solvent, and it ends at or above its floor. `test/Proofs.t.sol` holds three symbolic proofs
 run with Halmos; the solver's search is too deep for one. Not audited. Not deployed.
