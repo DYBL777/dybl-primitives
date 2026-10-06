@@ -3,9 +3,9 @@ pragma solidity 0.8.24;
 import {Test} from "forge-std/Test.sol";
 import {SeasonArc} from "../src/SeasonArc.sol";
 
-/// @dev A thin host so the library can be driven directly with exact inputs. Every assertion
-///      below is on a value computed by hand from the rule, not on a figure the library
-///      produced and was then asserted against itself.
+/// @dev A thin host so the library can be driven directly with exact inputs. Mostly single
+///      calls against figures worked out by hand from the rule; several tests loop over a season,
+///      and the 52-draw decline test pins a measured figure.
 contract ArcHost {
     function size(uint256 pot, uint256 last, uint256 left, uint256 income, uint256 openBps)
         external pure returns (uint256 amount, SeasonArc.Bind bind)
@@ -20,12 +20,11 @@ contract ArcHost {
     { return SeasonArc.size(pot, last, left, income, returnBps, openBps); }
 }
 
-/// @notice THE ENGINE'S OWN TESTS. Written once it was found that the sizing library had
-///         none, and that four separate mutations to it and to what the host feeds it left
-///         the entire suite green: growth capped at flat, a draws-remaining figure one too
-///         high, a zero income estimate, and this draw's income counted twice. Each of those
-///         is a named assertion below, so a mutation that reintroduces it fails here rather
-///         than passing everywhere.
+/// @notice THE LIBRARY'S OWN TESTS. Written once it was found that the sizing library had
+///         none, and that four separate mutations left the host's suite green: growth capped
+///         at flat, a draws-remaining figure one too high, a zero income estimate, and this
+///         draw's income counted twice. Each library-side form is a named assertion below;
+///         the host-side forms are pinned in the host's suite.
 contract SeasonArcUnit is Test {
     ArcHost h;
     function setUp() public { h = new ArcHost(); }
@@ -159,16 +158,15 @@ contract SeasonArcUnit is Test {
         assertEq(uint256(bind), uint256(SeasonArc.Bind.POT), "and the reason is the pot");
     }
 
-    /// @dev THE POT IS THE CEILING. When the arc wants more than is there, the payment is the
-    ///      pot and the bind says so, rather than promising money that does not exist.
+    /// @dev THE SEASON IS THE CEILING. When the arc cannot carry the last payment, the
+    ///      fallback pays the largest flat amount the walk survives (SUSTAINED); it does not
+    ///      take the pot early, and it does not promise money that does not exist.
     function test_theArcNeverPromisesMoreThanTheSeasonCanAfford() public view {
-        // Five draws left and a pot smaller than the last payment. The arc wants more than
-        // is there, so the pot binds; but it may not take everything, because four draws
-        // still have to pay something. What is left for each of them is the equal share.
-        // NAMED FOR THE POT BIND AND ASSERTING THE FALLBACK, which is what tipped a reader
-        // off that the pot branch could never fire from the solver path: reaching it required
-        // the solver to bottom out, and bottoming out is caught by the fallback first. The
-        // branch is gone; POT now means only that there was nothing to size from.
+        // Five draws left and a pot smaller than the last payment. The arc cannot carry the
+        // last payment flat, so the fallback pays; it may not take everything, because four
+        // draws still have to pay something. A pot branch once sat here and could never fire
+        // from the solver path, because bottoming out is caught by the fallback first. It is
+        // gone; POT now means only that there was nothing to size from.
         //
         // WITH ZERO INCOME the answer is unchanged from the equal share this used to assert.
         // That is the point: the old rule was right only when no more tickets would be sold,
@@ -211,10 +209,10 @@ contract SeasonArcUnit is Test {
             "and reach it by solving rather than by hitting its own ceiling");
     }
 
-    /// @dev NO DRAW MAY BE LEFT WITH NOTHING TO PAY. If the arc cannot keep up, the equal
-    ///      share is the floor beneath it: the pot divided by the draws remaining. Without it
-    ///      a flat fallback can empty the pot with draws still to run, and the closing draw
-    ///      arrives at an empty pot that never fills.
+    /// @dev NO DRAW MAY BE LEFT WITH NOTHING TO PAY. If the arc cannot keep up, the fallback
+    ///      is the floor beneath it: the largest flat payment the pot and its future income can
+    ///      carry. Without it the arc can empty the pot with draws still to run, and the
+    ///      closing draw arrives at an empty pot that never fills.
     function test_theArcNeverEmptiesThePotEarly() public view {
         uint256 pot = 100; uint256 last = 60; uint256 left = 5;
         for (; left > 1; left--) {
@@ -285,9 +283,9 @@ contract SeasonArcUnit is Test {
         // down, and a bound on the deepest move alone cannot see that claim break: three
         // separate falls of a third each would have passed it. So both halves are pinned.
         //
-        // THE FIGURE MOVED FROM 4,223 TO 6,854 AT v0.41 AND THAT IS THE FIX, NOT A
-        // REGRESSION. The step down is taken by the solver's fallback, which until v0.41
-        // paid `pot / drawsLeft`: the pot held today spread across the draws remaining, as
+        // THE FIGURE MOVED FROM 4,223 TO 6,854 WHEN THE FALLBACK WAS REWRITTEN, AND THAT IS
+        // THE FIX, NOT A REGRESSION. The step down is taken by the solver's fallback, which
+        // until then paid `pot / drawsLeft`: the pot held today spread across the draws remaining, as
         // though not one more ticket would ever be sold. Here 200e6 a draw is still arriving
         // and the old rule counted none of it, so it paid about six tenths of what the season
         // could afford, undershooting by roughly 39%. The season now steps

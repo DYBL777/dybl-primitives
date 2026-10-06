@@ -35,18 +35,26 @@ contract StandInSeasons is Test {
         }
         assertEq(g.pot(), 0, "the closing draw took what was left");
         assertGt(g.paid(51), g.paid(0) * 10, "and the season rose more than tenfold");
+        // The closing figure the README quotes, pinned where it is measured.
+        assertApproxEqAbs(g.paid(51), 164_194e6, 1e6, "the closing draw the README quotes");
     }
 
     /// @dev A CROWD THAT LEAVES. Income falls 97% at draw 10. The payment steps down once, in
-    ///      that week, and the rest of the season is carried flat by the sustained branch: no
-    ///      draw pays nothing, and the pot still ends empty.
+    ///      that week, through the sustained branch, and the arc carries the rest flat at flat
+    ///      growth: no draw pays nothing, and the pot still ends empty. The last payment is
+    ///      passed unscaled; a host that scales it by field takes a different shape.
     function test_aCrowdThatLeavesStepsDownOnceAndIsCarriedToTheEnd() public {
         StandInGame g = new StandInGame(52, OPENING, RET);
         uint256 prev;
         uint256 falls;
         for (uint256 d = 1; d <= 52; d++) {
-            (uint256 a,) = g.draw(d < 10 ? 40_000e6 : 1_200e6);
+            (uint256 a, SeasonArc.Bind b) = g.draw(d < 10 ? 40_000e6 : 1_200e6);
             assertGt(a, 0, "no draw pays nothing");
+            if (d == 10) {
+                assertEq(uint256(b), uint256(SeasonArc.Bind.SUSTAINED), "the step is the fallback's");
+            } else if (d > 10 && d < 52) {
+                assertEq(uint256(b), uint256(SeasonArc.Bind.ARC), "and the arc carries the rest");
+            }
             if (d > 1 && a < prev) {
                 falls++;
                 assertEq(d, 10, "the only step down is in the week the crowd leaves");

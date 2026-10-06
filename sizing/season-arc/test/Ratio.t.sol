@@ -23,10 +23,11 @@ contract ClosingRatio is Test {
         }
     }
 
-    /// @dev Reported so the docs can quote a measured range with its lengths attached. The
-    ///      library figure is a FLOOR on what a real season pays at the close: this model
-    ///      assumes every tier finds a winner, and in a real field the tiers that find nobody
-    ///      return their pools to the pot, which lifts the closing draw further.
+    /// @dev Reported so the docs can quote a measured range with its lengths attached. At a
+    ///      return share of 2,990 this model assumes the jackpot is missed every draw and the
+    ///      other tiers pay out. A won jackpot returns less, and a tier that finds no winner and
+    ///      returns its pool returns more, so this is neither a floor nor a ceiling on what a
+    ///      real season pays at the close.
     function test_theRatioAtEachShippedSeasonLength() public {
         uint256[4] memory lengths = [uint256(12), 26, 52, 104];
         // The documented figures, x100, with a quarter-of-one-x tolerance. Change these only

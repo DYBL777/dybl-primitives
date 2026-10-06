@@ -44,14 +44,20 @@ comments of [src/SeasonArc.sol](src/SeasonArc.sol).
 Measured through the library, not modelled:
 
     flat income, 52 draws        opening 10,000, closing 164,194: a rise of about 16.4x
+                                 (StandIn.t.sol)
     closing over opening         about 14x at 12 draws, 15.7x at 26, 16.4x at 52,
                                  16.8x at 104 (Ratio.t.sol, same inputs at every length)
     income falls 97% at draw 10  one step down that week, then flat to the end; no draw pays
                                  nothing and the pot still ends empty (StandIn.t.sol)
 
-Those are the library's own figures with every payment's returned share coming back. A real
-host lifts the closing draw further, because tiers that find no winner return their money to
-the pot.
+The collapse shape is with the last payment passed unscaled, as the stand-in does. A host that
+scales it by the change in field (Lettery TF does) steps down by the field ratio and climbs from
+there.
+
+All of these run at a 29.9% return share, which assumes the jackpot is missed every draw and the
+other tiers pay out. A won jackpot returns less to the pot; a tier that finds no winner and
+returns its pool returns more. So these are the library's figures at one assumption, not a floor
+or a ceiling on what a real host pays.
 
 ## Using it
 
@@ -81,12 +87,13 @@ an amount; the host decides how that amount is split and paid.
 **Lettery TF**, a weekly lottery with a fixed season, is the host this library was written for
 and the first to link it. Its history before it was extracted, every change to the solver
 included, is in Lettery TF's CHANGELOG. Where the seed and the breath behind it came from, in the
-author's words, is in [ORIGIN.md](../../ORIGIN.md) at the root of the DYBL primitives repository.
+author's words, is in [ORIGIN.md](https://github.com/DYBL777/dybl-primitives/blob/main/ORIGIN.md)
+at the root of the DYBL primitives repository.
 
 ## Files
 
     src/SeasonArc.sol                 the library
-    test/SeasonArc.t.sol              single calls against figures worked out by hand
+    test/SeasonArc.t.sol              mostly single calls against figures worked out by hand
     test/SustainedFallback.t.sol      the flat-payment fallback, against the rule it replaced
     test/Ratio.t.sol                  closing over opening at 12, 26, 52 and 104 draws
     test/Sim.t.sol                    whole seasons called directly
@@ -104,11 +111,13 @@ From this folder, on a fresh clone:
 On forge 1.5.1 with solc 0.8.24: 32 tests across 6 suites, zero failures. The library builds to
 1,310 runtime bytes with the settings in `foundry.toml`, which are the settings of its first
 host, and measured the same inside that host. At 1.0.0 the two builds differed with identical
-settings (1,278 here, 1,432 in the host). The cause was not traced, the likely one being that
-viaIR output depends on what else is compiled alongside, and it is one more reason a host links
-the copy it deployed rather than a rebuild.
+settings (1,278 here, 1,432 in the host). What is known: the settings matched, the source path
+matched, and from 1.1.0 the sizes match. What is not: which input made them differ, which was
+not found before the difference went away. It is one more reason a host links the copy it
+deployed rather than a rebuild.
 
 ## Licence
 
 Business Source License 1.1, with the same terms as Lettery TF: non-production use is granted,
-and it becomes MIT on 1 February 2030. See [LICENSE](LICENSE). The test tree is MIT.
+and it becomes MIT on 1 February 2030. See [LICENSE](LICENSE). The test tree and the Python sim
+are MIT.

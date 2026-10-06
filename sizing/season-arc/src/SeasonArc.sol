@@ -12,7 +12,7 @@ pragma solidity 0.8.24;
  *         an EQUAL-SHARE GLIDE, tank divided by draws remaining, which lands on zero
  *         arithmetically (at one draw left it pays everything, it cannot do otherwise) and
  *         rises as a side effect, because the tank grows while the divisor shrinks. That
- *         belongs under its own name, SeasonGlide, and this library must not take the general
+ *         belongs under its own name, SeedGlide, and this library must not take the general
  *         one from it.
  *
  *         WHY A TICKET-FUNDED HOST CANNOT USE THAT RULE. The glide works when the opening
@@ -61,9 +61,11 @@ pragma solidity 0.8.24;
  *         dominates the weekly inflow within a few draws, so a collapse in ticket sales moves
  *         the numerator slowly while the denominator falls by one every draw regardless.
  *         THE SHAPE ON A COLLAPSE IS ONE STEP, not a gentle decline: at 52 draws with the
- *         crowd dropping 97% at draw 10, the payment steps down once in the week the crowd
- *         leaves and is carried flat after it (test/StandIn.t.sol). A rail would have nothing
- *         to catch on the way UP either, which is the other reason there is none.
+ *         crowd dropping 97% at draw 10, and the last payment passed unscaled as the stand-in
+ *         does, the payment steps down once in the week the crowd leaves and is carried flat
+ *         after it (test/StandIn.t.sol). A host that scales the last payment by field steps
+ *         down by the field ratio and climbs from there. A rail would have nothing to catch
+ *         on the way UP either, which is the other reason there is none.
  *
  *         WHAT THIS LIBRARY DOES NOT DO. It does not know about tiers, reseed, the jackpot
  *         roll. It answers with an amount; the host splits it and withholds from it, so a
@@ -191,7 +193,7 @@ library SeasonArc {
         // the close. NOT `pot / drawsLeft`, which spreads today's pot across the draws
         // remaining as though no further ticket will be sold. On a pot of $28,744 with eight
         // draws left and $4,000 a draw still arriving, the equal share pays $3,593 where
-        // $9,606.23 is carryable.
+        // $9,606.23 is carryable (at a 29.9% return share).
         //
         // GATED ON THE ARC HAVING FAILED, NOT ON THE ARC SIZING BELOW AN EQUAL SHARE, and the
         // distinction is the whole mechanism. A healthy arc deliberately pays LESS than an
@@ -199,12 +201,15 @@ library SeasonArc {
         // applied unconditionally flattens every season and the arc stops existing. Growth is
         // untouched: a solver that finds any g above flat never reaches this line.
         //
-        // THIS LIBRARY NEVER SIZES DOWN; THE DRAW STILL CAN. G_MIN is flat, so the solver
-        // does not choose a decline. The host hands in the last payment scaled by the change
-        // in field, so a shrinking crowd scales the anchor down before this function sees it.
-        // With this fallback, a 52-draw season whose crowd drops 97% at draw 10 steps down
-        // once, in the week the crowd leaves, and is carried flat to the end
-        // (test/StandIn.t.sol).
+        // THE SOLVER'S ARC DOES NOT CHOOSE A DECLINE; THE FALLBACK CAN STEP DOWN. G_MIN is
+        // flat, so the search never picks a factor below one. This fallback can step down
+        // once, when the pot cannot carry the last payment flat. A host may also hand in the
+        // last payment scaled by the change in field (Lettery TF does), so a shrinking crowd
+        // scales the anchor down before this function sees it. With the last payment passed
+        // unscaled, as the stand-in does, a 52-draw season whose crowd drops 97% at draw 10
+        // steps down once, in the week the crowd leaves, and is carried flat to the end
+        // (test/StandIn.t.sol); a host that scales it by field steps down by the field ratio
+        // and climbs from there.
         //
         // DO NOT REGATE THIS ON `amount < equalShare`. That gate can only fire when the arc
         // is too SHALLOW, which is never the dangerous case:

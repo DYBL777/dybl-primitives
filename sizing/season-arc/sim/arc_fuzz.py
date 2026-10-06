@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MIT
 """
 SEASONARC FUZZER. Locates whether the sizing RULE holds across random seasons.
 
@@ -48,7 +49,7 @@ def solve(pot, last_paid, dl, inc, rb):
 
 
 def max_sustainable_bisect(pot, dl, inc, rb):
-    """v3's version, kept for comparison. Note the search bound pot*20 is arbitrary, and at
+    """The earlier bisection, kept for comparison. Note the search bound pot*20 is arbitrary, and at
     large magnitudes 64 iterations no longer resolves to the wei: at pot=1e30 it undershoots
     the true answer by roughly 1e12."""
     lo, hi = 0, pot * 20 + inc * dl + 1
@@ -105,7 +106,7 @@ def size(pot, last_paid, dl, inc, fix_glide, f, last_field):
     if last_paid == 0: return pot * OPENING // BPS, "OPENING"
     anchor = last_paid
     if last_field > 0 and f > 0:
-        anchor = last_paid * f // last_field          # v0.29 anchor scaling
+        anchor = last_paid * f // last_field          # the host's anchor scaling
     g = solve(pot, anchor, dl, inc, RETURN_BPS)
     if g == G_MIN:
         if fix_glide:
@@ -117,10 +118,11 @@ def size(pot, last_paid, dl, inc, fix_glide, f, last_field):
 
 
 def m3_each(amt, f):
+    """Match-3's own share per winner: its own pool and its share of the missed jackpot.
+    Roll-downs from higher tiers are not modelled, so dollar figures understate match-3;
+    comparisons between runs are unaffected."""
     if f == 0: return 0.0
     jp = 0.33 * amt; to_low = 0.30 * jp
-    t1 = 0.20 * amt + 0.34 * to_low
-    t2 = 0.15 * amt + 0.33 * to_low + t1
     t3 = 0.12 * amt + 0.33 * to_low
     return t3 / (f * P[3])
 
@@ -140,7 +142,7 @@ def season(fields, share, fix_glide):
         roll += 0 if release else jp * 4000 // BPS
         pot += jp * 3000 // BPS + amt * 2000 // BPS
         rows.append(dict(d=d, f=f, amt=amt, pot=pot, each=m3_each(amt / U, f),
-                         bind=bind, inc=inc))
+                         bind=bind, inc=inc, roll=roll))
         misses = 0 if release else misses + 1
         if f > 0: last_paid, last_field = amt, f
     return rows
@@ -192,10 +194,10 @@ def sec4():
     print("400 random crowd shapes, eleven patterns, five season lengths.")
     print("Property: a draw where the crowd GREW never pays less than the draw before.")
     print()
-    print("  version        draws that fell   by branch")
-    for fg, lbl in ((False, "as it ships"), (True, "with the fix")):
+    print("  version                    draws that fell   by branch")
+    for fg, lbl in ((False, "pot/drawsLeft (old rule)"), (True, "as it ships")):
         t, by = fuzz(fg)
-        print("  {:<14} {:>15d}   {}".format(lbl, t, by if by else "-"))
+        print("  {:<26} {:>15d}   {}".format(lbl, t, by if by else "-"))
     print()
     print("  healthy arrivals, where the fix must do nothing:")
     for at in (15, 30):
@@ -209,7 +211,8 @@ def sec4():
 def sec5():
     print()
     print("Late arrival flattens the remaining climb. 104 draws, 1,000 players,")
-    print("1.7x arrives at draw 86 and stays. Per match-3 winner:")
+    print("1.7x arrives at draw 86 and stays. Match-3's own share per winner")
+    print("(roll-downs not modelled):")
     base = season([1000] * 104, 0.0, True)
     arr = season([1000] * 85 + [1700] * 19, 0.0, True)
     for lbl, r in (("no arrival", base), ("arrival   ", arr)):
@@ -222,13 +225,13 @@ def sec5():
     print("  arrival needs every remaining payment multiplied by k. The extra crowd supplies")
     print("  (k-1)*f*POT_SHARE per draw and the extra demand is (k-1)*payments. The (k-1)")
     print("  cancels, so it is absorbable from income alone if and only if remaining income")
-    print("  covers remaining payments net of the 20% return credit.")
+    print("  covers remaining payments net of the {:.1f}% return credit.".format(RETURN_BPS / 100))
     print()
     print("   from draw    income      payments net    covered")
     for start in (86, 70, 50, 30, 11):
         m = 104 - start + 1
         inc = 1000 * POT_SHARE * m
-        net = sum(x["amt"] - x["amt"] * 2000 // BPS for x in base[start - 1:])
+        net = sum(x["amt"] - x["amt"] * RETURN_BPS // BPS for x in base[start - 1:])
         print("   {:>9}  ${:>10,.0f}     ${:>11,.0f}    {:>5.0f}%".format(
             start, inc / U, net / U, 100 * inc / net))
 
@@ -237,23 +240,26 @@ def sec5():
         a = arr[d - 1]; t = base[d - 1]["each"]
         if a["each"] < t: need += a["amt"] * (t / a["each"] - 1)
     print()
+    closing = arr[-1]["amt"]; stock = arr[-2]["roll"]; ending = closing + stock
     print("   cost of restoring the climb, draws 86-103: ${:,.0f}".format(need / U))
-    print("   entire finale available to pay for it:     ${:,.0f}".format(arr[-1]["amt"] / U))
+    print("   the closing draw's sized prize:            ${:,.0f}".format(closing / U))
+    print("   unwon stockpile going into it:             ${:,.0f}".format(stock / U))
+    print("   the ending holds, together:                ${:,.0f}".format(ending / U))
     print("   surplus the arrival itself created:        ${:,.0f}".format(
-        (arr[-1]["amt"] - base[-1]["amt"]) / U))
-    print("   shortfall is {:.1f}x the whole finale.".format(need / arr[-1]["amt"]))
+        (closing - base[-1]["amt"]) / U))
+    print("   the cost is {:.2f}x what the ending holds.".format(need / ending))
 
 
 def sec8():
     print()
     print("Closed form against the bisection it replaces.")
-    print("  spec headline, pot 28,744 / 8 draws left / 4,000 a draw arriving:")
+    print("  the fallback's headline case, pot 28,744 / 8 draws left / 4,000 a draw arriving:")
     print("    GLIDE pays          ${:,}".format(28744 // 8))
     print("    closed form         ${:,}".format(max_sustainable_cf(28744, 8, 4000, RETURN_BPS)))
-    print("    v3 bisection        ${:,}".format(
+    print("    earlier bisection   ${:,}".format(
         max_sustainable_bisect(28744, 8, 4000, RETURN_BPS)))
-    print("    The recorded figure is 9,606. That is the un-floored bound; 9,605 is the largest")
-    print("    payment the integer walk actually survives. Superseded: the CONTRACT computes 9,606.23 at six decimals and every document now quotes that.")
+    print("    At whole-dollar scale the walk survives 9,605. The contract, at six decimals,")
+    print("    computes 9,606.23, and that is the figure the documents quote.")
     rng = random.Random(7); worst = 0; bad = 0
     for _ in range(40000):
         pot = rng.randint(1, 10 ** 14); dl = rng.randint(2, 520); inc = rng.randint(0, 10 ** 12)
@@ -263,7 +269,7 @@ def sec8():
         worst = max(worst, abs(a - b))
     print("  40,000 random cases: max difference {}, infeasible answers {}".format(worst, bad))
     big = (10 ** 30, 104, 10 ** 28)
-    print("  at pot=1e30 the v3 bisection undershoots by {:,} wei; closed form is exact.".format(
+    print("  at pot=1e30 the earlier bisection undershoots by {:,} wei; closed form is exact.".format(
         max_sustainable_cf(*big, RETURN_BPS) - max_sustainable_bisect(*big, RETURN_BPS)))
 
 

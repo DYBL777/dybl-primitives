@@ -13,13 +13,13 @@ import {SeasonArc} from "../src/SeasonArc.sol";
 ///         reach, so ordinary growth landed in a branch only a collapse used to reach.
 ///
 ///         The fallback then paid `pot / drawsLeft`, which spreads the pot held TODAY across
-///         the draws remaining as though no further income would arrive. It always does.
-///         Modelled on a 104-draw season, a 1.7x arrival at draw 86 took the payment from
-///         $4,423,566 to $655,704 and a match-3 winner from $34.34 to $3.02, and it did not
-///         recover. Across 400 modelled crowd shapes, 59 draws saw the crowd grow and the
-///         payment fall, and all 59 were this branch.
+///         the draws remaining as though no further income would arrive. In a model not in
+///         this repository, a 104-draw season with a 1.7x arrival at draw 86 took the payment
+///         from $4,423,566 to $655,704 and a match-3 winner from $34.34 to $3.02, and it did
+///         not recover. In sim/arc_fuzz.py, across 400 modelled crowd shapes, 59 draws saw the
+///         crowd grow and the payment fall, and all 59 were this branch.
 ///
-///         EVERYTHING ABOVE IS PYTHON. This file is where those claims meet the Solidity.
+///         EVERYTHING ABOVE IS MODELLED. This file is where those claims meet the Solidity.
 contract SustainedFallbackTest is Test {
 
     uint256 internal constant BPS = 10_000;
@@ -92,8 +92,11 @@ contract SustainedFallbackTest is Test {
         uint256 pot = 28_744e6;
         uint256 dl = 8;
         uint256 inc = 4_000e6;
-        uint256 lastPaid = 5_000e6;      // what the previous draw paid
+        uint256 lastPaid = 5_000e6;      // the previous draw's payment, compared against below
 
+        // THE ANCHOR PASSED IS THE POT ITSELF, to force the fallback. Passed as $5,000 the arc
+        // still fits and the library pays $5,692.50 (ARC). What is compared here is the two
+        // fallback rules against the $5,000 the previous draw paid.
         (uint256 amount, SeasonArc.Bind bind) =
             h.sizeWithReturn(pot, pot, dl, inc, 2_990, 2_500);
         assertEq(uint256(bind), uint256(SeasonArc.Bind.SUSTAINED), "precondition: the fallback fired");
@@ -135,8 +138,8 @@ contract Harness {
         return SeasonArc.size(pot, last, left, income, returnBps, openBps);
     }
 
-    /// @dev The library's own forward walk. _leftover moved from private to internal at
-    ///      v0.41 so this can call it: the fuzz below has to assert against the REAL solvency
+    /// @dev The library's own forward walk. _leftover moved from private to internal when
+    ///      the fallback was rewritten, so this can call it: the fuzz below has to assert against the REAL solvency
     ///      test, not a reimplementation of it, because a reimplementation that drifts is
     ///      exactly how a fuzz keeps passing while testing something that no longer exists.
     ///      Library internals are inlined, so the visibility change costs no bytecode.

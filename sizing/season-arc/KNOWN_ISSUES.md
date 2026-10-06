@@ -25,16 +25,18 @@ means a shallower arc, which errs toward leaving money for the last draw rather 
 paying more than the season can carry. It tilts money from the draws before the end toward the
 end, and is a modelling choice rather than an accident; the comment in `_leftover` says so.
 
-**A collapsing season steps down once and is then carried flat.** The solver does not choose a
-decline: its search for the growth factor starts at flat. When income falls away the payment holds
-flat where it can, and when even a flat payment cannot be carried, the fallback steps it down to the
-largest flat amount the pot can carry to the end. Measured in StandIn.t.sol: income falling 97% at
-draw 10 of 52 gives one step down that week and flat payments after it.
+**A collapsing season steps down once.** The solver does not choose a decline: its search for
+the growth factor starts at flat. When income falls away the payment holds flat where it can, and
+when even a flat payment cannot be carried, the fallback steps it down to the largest flat amount
+the pot can carry to the end. Measured in StandIn.t.sol, with the last payment passed unscaled as
+the stand-in does: income falling 97% at draw 10 of 52 gives one step down that week and flat
+payments after it. A host that scales the last payment by field (Lettery TF does) steps down by
+the field ratio and climbs from there, with no flat stretch.
 
 **The cost of a call grows with the draws left.** The solver bisects the growth factor, and each
-step walks every remaining draw. Measured at 52 draws on flat income: about 347,000 gas for the
-dearest call (the second draw, with 51 left) and about 9.6 million across the season; both are
-logged figures that no test asserts. A season
+step walks every remaining draw. Measured at 52 draws on flat income, with a harness not in this
+repository and asserted by no test: about 347,000 gas for the dearest call (the second draw, with
+51 left) and about 9.6 million across the season. A season
 far longer than 52 draws costs proportionally more on its early draws, and a host's caller has
 to be able to afford that.
 

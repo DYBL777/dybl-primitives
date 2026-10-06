@@ -6,11 +6,12 @@ repository, every change to its logic included, is in Lettery TF's CHANGELOG up 
 **[1.1.0]** PROBLEM: the fallback was entered whenever the solver returned its floor, and the
   solver returns its floor in two cases: flat payments running the pot dry, and flat payments
   fitting while nothing steeper does. In the second the arc had not failed, yet the draw was
-  paid by the fallback. Lettery TF found it in one sampled case in about 1,560: a pot of $406,000
-  that flat payments would have carried to the end with $249 to spare. SOLUTION: at the floor the
+  paid by the fallback. Lettery TF's models found it (one sampled case in about 1,560, from a model
+  not in this repository). SOLUTION: at the floor the
   forward walk is run once more at flat. If flat leaves anything, the draw pays what the last one
   did (bind ARC) and the closing draw takes the surplus; only when flat runs dry does the
-  fallback pay. `test/SustainedFallback.t.sol` pins a boundary case.
+  fallback pay. `test/SustainedFallback.t.sol` pins a boundary case: a pot of $1,820,824 that flat
+  payments of the last amount carry to the end with about $1,032 to spare.
   Every model that ports the rule, `sim/arc_fuzz.py` here and Lettery TF's raid, player-return,
   rebate, trace and weighting models, gave output identical to the last character before and
   after the change, so no published figure moves.
@@ -28,7 +29,7 @@ repository, every change to its logic included, is in Lettery TF's CHANGELOG up 
 **Tests added without a change to the library** (still 1.1.3): `test/Invariants.t.sol`, an
   invariant suite running seasons of random length, opening and return shares through the
   stand-in game, with crowds that arrive, leave or stop buying. After every draw it checks that no
-  draw pays more than the pot, the opening is its share, the arc never sizes down, an arc payment
+  draw pays more than the pot, the opening is its share, the arc does not size down, an arc payment
   leaves something for later, the closing draw empties the pot and every unit is accounted for.
   A closing draw that keeps a sliver, an oversized opening, an arc that shrinks, or a removed
   fallback each fails it.
@@ -37,6 +38,13 @@ repository, every change to its logic included, is in Lettery TF's CHANGELOG up 
 
 Versions whose library instructions did not move. The compiler appends a hash of the source text
 to the runtime bytes, so a comment change still gives the library a new address when deployed.
+
+**1.1.4** Comments that overstated the library corrected. The solver's arc does not choose a
+decline, but the fallback can step down once; the one-step collapse shape holds with the last
+payment passed unscaled; the $9,606.23 example is at a 29.9% return share; the sibling rule is
+named SeedGlide. Test comments, the README, KNOWN_ISSUES and the Python sim now match what the
+code and tests show, two figures the docs quote are now asserted where they are measured, and the
+sim's coverage table uses the return share it models.
 
 **1.1.3** The `SUSTAINED` bind documented as able to carry zero, and an error's NatSpec no longer
 names one host's error.
