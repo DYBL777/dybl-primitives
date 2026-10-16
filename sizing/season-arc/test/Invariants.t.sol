@@ -42,17 +42,17 @@ contract ArcHandler is Test {
         seasonOut = 0;
     }
 
-    /// Start a fresh season with random length, opening share and return share.
+    /// @dev Start a fresh season with random length, opening share and return share.
     function startSeason(uint8 drawsSeed, uint16 openingSeed, uint16 returnSeed) external {
         _newSeason(bound(drawsSeed, 2, 104), bound(openingSeed, 1_000, 5_000), bound(returnSeed, 0, 5_000));
     }
 
-    /// The crowd changes size: from nobody to three times the usual.
+    /// @dev The crowd changes size: from nobody to three times the usual.
     function crowd(uint16 levelSeed) external {
         crowdBps = bound(levelSeed, 0, 30_000);
     }
 
-    /// One draw, with income around the crowd's level.
+    /// @dev One draw, with income around the crowd's level.
     function draw(uint256 jitterSeed) external {
         if (game.drawsDone() == game.DRAWS()) {
             _newSeason(game.DRAWS(), openingBps, returnBps);

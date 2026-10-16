@@ -26,13 +26,16 @@ repository, every change to its logic included, is in Lettery TF's CHANGELOG up 
 
 ---
 
-**Tests added without a change to the library** (still 1.1.3): `test/Invariants.t.sol`, an
+**Tests added without a change to the library** (library unchanged at 1.1.4): `test/Invariants.t.sol`, an
   invariant suite running seasons of random length, opening and return shares through the
   stand-in game, with crowds that arrive, leave or stop buying. After every draw it checks that no
   draw pays more than the pot, the opening is its share, the arc does not size down, an arc payment
   leaves something for later, the closing draw empties the pot and every unit is accounted for.
   A closing draw that keeps a sliver, an oversized opening, an arc that shrinks, or a removed
-  fallback each fails it.
+  fallback each fails it. Unit tests also pin the two input guards, the no-draws-left case, a huge
+  income against the pot, and the fallback's correction loop on inputs where the closed form's
+  first guess is too high. The fallback fuzz now checks that a zero answer means not even one unit
+  is affordable.
 
 ## Comments and documentation
 

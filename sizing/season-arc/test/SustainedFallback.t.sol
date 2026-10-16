@@ -74,7 +74,12 @@ contract SustainedFallbackTest is Test {
 
         (uint256 amount, SeasonArc.Bind bind) = h.sizeWithReturn(pot, pot, dl, inc, rb, 2_500);
         if (bind != SeasonArc.Bind.SUSTAINED) return;   // the arc found room; nothing to check
-        if (amount == 0) return;                        // nothing was affordable at all
+        if (amount == 0) {
+            // A zero answer is right only when not even one unit survives the walk. Skipping it
+            // would let a fallback that wrongly returns zero pass.
+            assertEq(h.leftover(pot, 1, dl, inc, rb, G_MIN), 0, "zero is paid only when one unit is unaffordable");
+            return;
+        }
 
         assertGt(h.leftover(pot, amount, dl, inc, rb, G_MIN), 0,
             "what it pays must reach the close with something standing");
@@ -128,6 +133,58 @@ contract SustainedFallbackTest is Test {
         (uint256 amount, SeasonArc.Bind bind) = h.sizeWithReturn(pot, last, dl, inc, rb, 2_500);
         assertEq(uint256(bind), uint256(SeasonArc.Bind.ARC), "the arc has flattened, not failed");
         assertEq(amount, last, "so the draw pays what the last one did");
+    }
+
+    /// @dev A HUGE INCOME STILL LEAVES THE FIRST DRAW UNDER THE POT. When income is large against
+    ///      the pot, the binding limit is the first draw's: the payment must stay below the pot
+    ///      standing before it. The anchor passed is the pot, to force the fallback.
+    function test_aHugeIncomeStillLeavesTheFirstDrawUnderThePot() public view {
+        (uint256 amount, SeasonArc.Bind bind) = h.sizeWithReturn(100e6, 100e6, 3, 1_000e6, 2_990, 2_500);
+        assertEq(uint256(bind), uint256(SeasonArc.Bind.SUSTAINED), "precondition: the fallback fired");
+        assertEq(amount, 99_999_999, "one unit under the pot, and no more");
+    }
+
+    /// @dev THE CORRECTION LOOP, PINNED. The closed form's first guess is the answer only when
+    ///      integer flooring costs the walk nothing. Flooring each returned share loses up to a
+    ///      unit a draw, so on most inputs the first guess is a few units too high and the loop
+    ///      has to find the largest payment the walk survives. Each case below is one where the
+    ///      first guess fails the walk, from a miss of one unit to the largest the formula can
+    ///      make (one less than the draws left). The figures are raw units; flooring bites the
+    ///      same at any scale. The anchor passed is the pot, to force the fallback.
+    function test_theCorrectionLoopFindsTheLargestPaymentWhenTheFirstGuessMisses() public view {
+        uint256[5][6] memory cases = [
+            [uint256(5_000), 40, 91, 3_745, 335],                    // misses by 1
+            [uint256(471), 8, 0, 9_907, 435],                        // misses by 7, one under the draws left
+            [uint256(6_502_719), 52, 7, 9_999, 6_470_027],           // misses by 51, one under the draws left
+            [uint256(33), 30, 0, 9_997, 3],                          // a tiny payment, inside the band's floor
+            [uint256(28_744e6), 8, 4_000e6, 2_990, 9_606_229_895],   // the headline case, exact
+            [uint256(28_744e6), 52, 1e6, 9_990, 27_397_716_432]      // a full season at six-decimal scale
+        ];
+        for (uint256 i; i < cases.length; i++) {
+            uint256 pot = cases[i][0];
+            uint256 dl = cases[i][1];
+            uint256 inc = cases[i][2];
+            uint256 rb = cases[i][3];
+            uint256 want = cases[i][4];
+
+            uint256 guess = _firstGuess(pot, dl, inc, rb);
+            assertEq(h.leftover(pot, guess, dl, inc, rb, G_MIN), 0, "precondition: the first guess fails the walk");
+            assertLt(want, guess, "and the answer is below it");
+
+            (uint256 amount, SeasonArc.Bind bind) = h.sizeWithReturn(pot, pot, dl, inc, rb, 2_500);
+            assertEq(uint256(bind), uint256(SeasonArc.Bind.SUSTAINED), "the fallback fired");
+            assertEq(amount, want, "the loop finds the largest payment the walk survives");
+            assertGt(h.leftover(pot, amount, dl, inc, rb, G_MIN), 0, "which reaches the close with something standing");
+            assertEq(h.leftover(pot, amount + 1, dl, inc, rb, G_MIN), 0, "and one unit more does not");
+        }
+    }
+
+    /// @dev The closed form's first guess, restated here only to show that the cases above are
+    ///      ones where it misses. It is not the library's code.
+    function _firstGuess(uint256 pot, uint256 dl, uint256 inc, uint256 rb) internal pure returns (uint256) {
+        uint256 first = ((BPS * pot) - 1) / BPS;
+        uint256 last = ((BPS * (pot + (dl - 1) * inc)) - 1) / (BPS + (dl - 1) * (BPS - rb));
+        return first < last ? first : last;
     }
 }
 

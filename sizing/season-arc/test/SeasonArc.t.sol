@@ -158,6 +158,39 @@ contract SeasonArcUnit is Test {
         assertEq(uint256(bind), uint256(SeasonArc.Bind.POT), "and the reason is the pot");
     }
 
+    /// @dev A RETURN SHARE OF 100% OR MORE IS REFUSED. At 10,000 a payment would come back in
+    ///      full and the search would walk the wrong way, so the library reverts instead of
+    ///      answering. 9,999 is the largest share it accepts.
+    function test_aReturnShareOfOneHundredPercentOrMoreIsRefused() public {
+        vm.expectRevert(SeasonArc.BadReturnShare.selector);
+        h.sizeWithReturn(400e6, 100e6, 10, 40e6, 10_000, 2_500);
+        vm.expectRevert(SeasonArc.BadReturnShare.selector);
+        h.sizeWithReturn(400e6, 100e6, 10, 40e6, type(uint256).max, 2_500);
+        (uint256 amount, ) = h.sizeWithReturn(400e6, 100e6, 10, 40e6, 9_999, 2_500);
+        assertGt(amount, 0, "9,999 is accepted and sizes a payment");
+    }
+
+    /// @dev AN OPENING SHARE ABOVE THE WHOLE POT IS REFUSED. The whole pot, 10,000, is the
+    ///      largest opening the library accepts.
+    function test_anOpeningShareAboveTheWholePotIsRefused() public {
+        vm.expectRevert(SeasonArc.OpeningShareTooLarge.selector);
+        h.size(400e6, 0, 52, 40e6, 10_001);
+        (uint256 amount, SeasonArc.Bind bind) = h.size(400e6, 0, 52, 40e6, 10_000);
+        assertEq(amount, 400e6, "an opening of the whole pot pays the whole pot");
+        assertEq(uint256(bind), uint256(SeasonArc.Bind.OPENING), "and says so");
+    }
+
+    /// @dev NO DRAWS LEFT SIZES TO NOTHING, even with a pot and a last payment standing. Without
+    ///      this case the search would run over an empty season and answer far above the pot.
+    function test_noDrawsLeftSizesToNothing() public view {
+        (uint256 amount, SeasonArc.Bind bind) = h.size(400e6, 100e6, 0, 40e6, 2_500);
+        assertEq(amount, 0, "no draw to size, no payment");
+        assertEq(uint256(bind), uint256(SeasonArc.Bind.POT), "and the reason is that there is nothing to size");
+        (amount, bind) = h.size(400e6, 0, 0, 40e6, 2_500);
+        assertEq(amount, 0, "the same before any payment has been made");
+        assertEq(uint256(bind), uint256(SeasonArc.Bind.POT), "and the opening share is not applied");
+    }
+
     /// @dev THE SEASON IS THE CEILING. When the arc cannot carry the last payment, the
     ///      fallback pays the largest flat amount the walk survives (SUSTAINED); it does not
     ///      take the pot early, and it does not promise money that does not exist.
