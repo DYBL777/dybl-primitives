@@ -4,7 +4,11 @@ Protect it, grow it, pace it.
 
 Solidity libraries for games and savings products that hold a pot of money. One question runs
 through all of them: how to make the pot bigger, and then what a big pot should do. The seed
-decides how much of the pot is kept back; the sizing solvers decide what each draw pays.
+decides how much of the pot is kept back; the sizing solvers decide how much each payout is.
+
+The sizing solvers answer what we call the Autonomous Distribution Rate Problem (ADRP): how much
+a pot should pay out each period, decided by the contract rather than a person. BreathEngine,
+Breath and SeasonArc answer it for different endings; SeedGlide, to come, is the fourth.
 
 **Pre-testnet. Not deployed, not audited.** Each library's known limits are in its own
 KNOWN_ISSUES.md.
@@ -13,13 +17,13 @@ Where the ideas came from is in [ORIGIN.md](ORIGIN.md). The library names are wo
 open to change. Earlier posts called EternalSeed the Compounding Reserve and BreathEngine the
 Solvency Autopilot.
 
-| Library     | Folder                                        | Answers                                  | First host        |
-|-------------|-----------------------------------------------|------------------------------------------|-------------------|
-| EternalSeed | [seed/eternal-seed](seed/eternal-seed)        | how much of the pot is kept back          | written into each game, not imported |
-| BreathEngine | [sizing/breath-engine](sizing/breath-engine)  | reach a floor by a deadline               | BullsEthCRE       |
-| Breath      | [sizing/breath](sizing/breath)                | what a game with no end date can afford   | Lettery Perpetual |
-| SeasonArc   | [sizing/season-arc](sizing/season-arc)        | a rising arc to the last draw             | Lettery TF        |
-| SeedGlide   | sizing/seed-glide (to come)                   | equal shares down to zero                 | SeedTogether      |
+| Library      | Folder                                       | Answers                                 | First host                           |
+|--------------|----------------------------------------------|-----------------------------------------|--------------------------------------|
+| EternalSeed  | [seed/eternal-seed](seed/eternal-seed)       | how much of the pot is kept back        | written into each game, not imported |
+| BreathEngine | [sizing/breath-engine](sizing/breath-engine) | reach a floor by a deadline             | BullsEthCRE                          |
+| Breath       | [sizing/breath](sizing/breath)               | what a pool with no end date can afford | Lettery Perpetual                    |
+| SeasonArc    | [sizing/season-arc](sizing/season-arc)       | a rising arc to the last payout         | Lettery TF                           |
+| SeedGlide    | sizing/seed-glide (to come)                  | equal shares down to zero               | SeedTogether                         |
 
 Each folder is its own Foundry project, built with the same compiler settings as its first host,
 so the library tested here is the one that host carries. To test one:

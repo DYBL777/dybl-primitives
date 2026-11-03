@@ -33,8 +33,9 @@ repository, every change to its logic included, is in Lettery TF's CHANGELOG up 
   leaves something for later, the closing draw empties the pot and every unit is accounted for.
   A closing draw that keeps a sliver, an oversized opening, an arc that shrinks, or a removed
   fallback each fails it. Unit tests also pin the two input guards, the no-draws-left case, a huge
-  income against the pot, and the fallback's correction loop on inputs where the closed form's
-  first guess is too high. The fallback fuzz now checks that a zero answer means not even one unit
+  income against the pot (the first draw binds), a small income against the pot (the last draw
+  binds), and the fallback's correction loop on inputs where the closed form's first guess is too
+  high. The fallback fuzz now checks that a zero answer means not even one unit
   is affordable.
 
 ## Comments and documentation

@@ -5,7 +5,7 @@ from the game's live state: its income, its yield and what it paid last time.
 
 **Pre-testnet. Not deployed, not audited.** The design and the economics are the author's. AI
 was the researcher, the check on whether the economics held, and the co-developer: writing the
-Solidity, each step audited and fixed before the next began. What is unproven or carried as a
+Solidity, each step tested and reviewed before the next began. What is unproven or carried as a
 known limit is in [KNOWN_ISSUES.md](KNOWN_ISSUES.md).
 
 ## What it answers
@@ -55,6 +55,16 @@ anything happens. It returns an amount; the host decides how that amount is spli
 Breath is one of four sizing solvers, each for a different ending: BreathEngine (reach a floor by
 a deadline), Breath (no end date), SeasonArc (a rising arc to the last draw) and SeedGlide
 (equal shares down to zero).
+
+## Prior art
+
+Breath was arrived at independently, from the question of what a pot with no end date can afford
+each draw. We later found it shares its shape with endowment spending rules such as Yale's, which
+blend last year's spending with a target rate so spending moves smoothly toward what the fund can
+sustain. Breath does that on-chain, from live state, every draw. It differs in three ways: it
+anchors on this draw's income and yield rather than a fixed share of the fund's value; its fast
+average can be set to react faster to a fall than to a rise (the library refuses the reverse);
+and there is no committee to step in, so the rule itself carries that job.
 
 ## Hosts
 

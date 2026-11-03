@@ -6,7 +6,7 @@ is spent down by the last draw.
 
 **Pre-testnet. Not deployed, not audited.** The design and the economics are the author's. AI
 was the researcher, the check on whether the economics held, and the co-developer: writing the
-Solidity, each step audited and fixed before the next began. What is unproven or carried as a
+Solidity, each step tested and reviewed before the next began. What is unproven or carried as a
 known limit is in [KNOWN_ISSUES.md](KNOWN_ISSUES.md).
 
 ## What it answers
@@ -109,7 +109,7 @@ From this folder, on a fresh clone:
     forge test
     python3 sim/arc_fuzz.py
 
-On forge 1.5.1 with solc 0.8.24: 37 tests across 6 suites, zero failures. The library builds to
+On forge 1.5.1 with solc 0.8.24: 38 tests across 6 suites, zero failures. The library builds to
 1,310 runtime bytes with the settings in `foundry.toml`, which are the settings of its first
 host, and measured the same inside that host. At 1.0.0 the two builds differed with identical
 settings (1,278 here, 1,432 in the host). What is known: the settings matched, the source path

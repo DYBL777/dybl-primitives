@@ -17,10 +17,12 @@ pragma solidity ^0.8.24;
  *          and my estimated inflow per period, what is the maximum rate I can
  *          safely distribute this period without breaching the floor at maturity?"
  *
- *         This question, the Autonomous Distribution Rate Problem (ADRP), is
- *         present in every DeFi protocol that holds funds and has obligations.
- *         To our knowledge, no production protocol answers it autonomously and
- *         forward-projecting. BreathEngine does.
+ *         This is BreathEngine's form of the Autonomous Distribution Rate Problem
+ *         (ADRP), which arises wherever a protocol holds funds and has obligations.
+ *         Some protocols distribute autonomously, with no governance. To our
+ *         knowledge, no on-chain protocol projects the remaining periods forward
+ *         and tests each candidate rate against the floor at maturity before
+ *         accepting it.
  *
  * @dev    WHAT THIS LIBRARY CONTAINS
  *

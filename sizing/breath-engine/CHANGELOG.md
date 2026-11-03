@@ -41,7 +41,10 @@ arithmetic) and scoped: the floor guarantee is exact against `sim()`'s own model
 appears only against a host that floors its pool and its seed in two steps, BullsEthCRE among
 them, with measured figures and their parameters. An unsupported claim about behaviour above a
 100% rate replaced with what is known. The in-file changelog and version tags removed; history
-lives here. Change Date aligned to 1 February 2030.
+lives here. Change Date aligned to 1 February 2030. Later, with no change to compiled code: the
+ADRP claim in the header scoped to on-chain protocols and to what `solve()` does (project the
+remaining periods and test each candidate rate against the floor), since some protocols already
+distribute autonomously with no governance.
 
 **1.3.** Supported input domain documented (gas grows with `periods`; `maxBreathBps` up to
 10,000). Host integration note corrected: BullsEth no longer clamps to a minimum rail. Boundary

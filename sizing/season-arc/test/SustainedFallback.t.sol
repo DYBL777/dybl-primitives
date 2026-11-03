@@ -13,11 +13,10 @@ import {SeasonArc} from "../src/SeasonArc.sol";
 ///         reach, so ordinary growth landed in a branch only a collapse used to reach.
 ///
 ///         The fallback then paid `pot / drawsLeft`, which spreads the pot held TODAY across
-///         the draws remaining as though no further income would arrive. In a model not in
-///         this repository, a 104-draw season with a 1.7x arrival at draw 86 took the payment
-///         from $4,423,566 to $655,704 and a match-3 winner from $34.34 to $3.02, and it did
-///         not recover. In sim/arc_fuzz.py, across 400 modelled crowd shapes, 59 draws saw the
-///         crowd grow and the payment fall, and all 59 were this branch.
+///         the draws remaining as though no further income would arrive, so a growing crowd
+///         could see its payment fall and not recover. In sim/arc_fuzz.py, across 400 modelled
+///         crowd shapes, 59 draws saw the crowd grow and the payment fall, and all 59 were this
+///         branch.
 ///
 ///         EVERYTHING ABOVE IS MODELLED. This file is where those claims meet the Solidity.
 contract SustainedFallbackTest is Test {
@@ -142,6 +141,39 @@ contract SustainedFallbackTest is Test {
         (uint256 amount, SeasonArc.Bind bind) = h.sizeWithReturn(100e6, 100e6, 3, 1_000e6, 2_990, 2_500);
         assertEq(uint256(bind), uint256(SeasonArc.Bind.SUSTAINED), "precondition: the fallback fired");
         assertEq(amount, 99_999_999, "one unit under the pot, and no more");
+    }
+
+    /// @dev THE OTHER END: THE LAST DRAW BINDS. When income is small against the pot, the binding
+    ///      limit is the last draw's: everything the pot holds plus the income still to arrive must
+    ///      cover every payment, with the last one still under what stands before it. With no
+    ///      return share there is no flooring, so the closed form's first guess is the answer and
+    ///      the figures can be checked by hand. Pot $1,000 over ten draws: with no income, ten
+    ///      payments of $99.999999 leave 10 units at the close and $100 leaves nothing. With $100
+    ///      a draw arriving, the same check gives $189.999999. The anchor passed is the pot, to
+    ///      force the fallback.
+    function test_whenTheLastDrawBindsTheFallbackPaysWhatThePotAndIncomeCarry() public view {
+        uint256[3][2] memory cases = [
+            [uint256(0), 99_999_999, 10],          // no income: the pot spread over ten draws, less one unit
+            [uint256(100e6), 189_999_999, 10]      // $100 a draw arriving
+        ];
+        for (uint256 i; i < cases.length; i++) {
+            uint256 pot = 1_000e6;
+            uint256 dl = 10;
+            uint256 inc = cases[i][0];
+            uint256 want = cases[i][1];
+
+            uint256 first = ((BPS * pot) - 1) / BPS;
+            uint256 last = ((BPS * (pot + (dl - 1) * inc)) - 1) / (BPS + (dl - 1) * BPS);
+            assertLt(last, first, "precondition: the last end binds, not the first");
+            assertEq(last, want, "the last end's bound, by hand");
+
+            (uint256 amount, SeasonArc.Bind bind) = h.sizeWithReturn(pot, pot, dl, inc, 0, 2_500);
+            assertEq(uint256(bind), uint256(SeasonArc.Bind.SUSTAINED), "precondition: the fallback fired");
+            assertEq(amount, want, "the fallback pays exactly what the last end allows");
+            assertEq(h.leftover(pot, amount, dl, inc, 0, G_MIN), cases[i][2],
+                "which reaches the close with the units the bound left standing");
+            assertEq(h.leftover(pot, amount + 1, dl, inc, 0, G_MIN), 0, "and one unit more does not");
+        }
     }
 
     /// @dev THE CORRECTION LOOP, PINNED. The closed form's first guess is the answer only when
