@@ -4,9 +4,9 @@ A Solidity library that decides what each draw of a fixed-length season should p
 the game holds now and the number of draws left. Payments rise across the season, and the pot
 is spent down by the last draw.
 
-**Pre-testnet. Not deployed, not audited.** The design and the economics are the author's. AI
-was the researcher, the check on whether the economics held, and the co-developer: writing the
-Solidity, each step tested and reviewed before the next began. What is unproven or carried as a
+**Pre-testnet. Not deployed, not audited.** The design and the mechanisms are the author's. AI was
+the researcher, the economic modeller and the co-developer: writing the Solidity, each step
+tested and reviewed before the next began. What is unproven or carried as a
 known limit is in [KNOWN_ISSUES.md](KNOWN_ISSUES.md).
 
 ## What it answers
@@ -37,8 +37,8 @@ known limit is in [KNOWN_ISSUES.md](KNOWN_ISSUES.md).
   its future income can carry to the end instead.
 - **The last draw** pays the whole pot. **An empty pot** pays nothing.
 
-The reasoning behind each branch, including the ones that were tried and removed, is in the
-comments of [src/SeasonArc.sol](src/SeasonArc.sol).
+Why each rule is shaped as it is, what it replaced, and where each claim is tested are in
+[DESIGN.md](DESIGN.md).
 
 ## What a season looks like
 
@@ -94,6 +94,7 @@ at the root of the DYBL primitives repository.
 ## Files
 
     src/SeasonArc.sol                 the library
+    DESIGN.md                         why each rule is shaped as it is, and the evidence for it
     test/SeasonArc.t.sol              mostly single calls against figures worked out by hand
     test/SustainedFallback.t.sol      the flat-payment fallback, against the rule it replaced
     test/Ratio.t.sol                  closing over opening at 12, 26, 52 and 104 draws
@@ -109,13 +110,16 @@ From this folder, on a fresh clone:
     forge test
     python3 sim/arc_fuzz.py
 
-On forge 1.5.1 with solc 0.8.24: 38 tests across 6 suites, zero failures. The library builds to
-1,310 runtime bytes with the settings in `foundry.toml`, which are the settings of its first
-host, and measured the same inside that host. At 1.0.0 the two builds differed with identical
-settings (1,278 here, 1,432 in the host). What is known: the settings matched, the source path
-matched, and from 1.1.0 the sizes match. What is not: which input made them differ, which was
-not found before the difference went away. It is one more reason a host links the copy it
-deployed rather than a rebuild.
+On forge 1.5.1 with solc 0.8.24: 38 tests across 6 suites, zero failures.
+
+**The library's size depends on what is compiled with it.** With the settings in `foundry.toml`
+(its first host's), the same source builds to 1,310 runtime bytes when the library is compiled
+on its own (`forge build --skip test`) and to 1,464 when the test files are compiled with it
+(`forge build`). The settings are identical; only the set of files in the compile differs, and
+that changes the code the compiler emits. This is also the likely cause of the
+gap seen at 1.0.0 (1,278 here, 1,432 in the host), which was not explained at the time. The
+address of a deployed copy follows from the bytes of the build that deployed it, which is why a
+host links the copy it deployed rather than a rebuild.
 
 ## Licence
 

@@ -4,9 +4,9 @@ A Solidity library that answers one question each period: given the stock on han
 must still be there at maturity, the periods left and the expected income, what is the most that
 can safely be paid out now?
 
-**Pre-testnet. Not deployed, not audited.** The design and the economics are the author's. AI
-was the researcher, the check on whether the economics held, and the co-developer: writing the
-Solidity, each step tested and reviewed before the next began. What is unproven or carried as a
+**Pre-testnet. Not deployed, not audited.** The design and the mechanisms are the author's. AI was
+the researcher, the economic modeller and the co-developer: writing the Solidity, each step
+tested and reviewed before the next began. What is unproven or carried as a
 known limit is in [KNOWN_ISSUES.md](KNOWN_ISSUES.md).
 
 ## What it answers

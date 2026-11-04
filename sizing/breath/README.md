@@ -3,9 +3,9 @@
 A Solidity library that decides what each draw of a game with no end date can afford to pay,
 from the game's live state: its income, its yield and what it paid last time.
 
-**Pre-testnet. Not deployed, not audited.** The design and the economics are the author's. AI
-was the researcher, the check on whether the economics held, and the co-developer: writing the
-Solidity, each step tested and reviewed before the next began. What is unproven or carried as a
+**Pre-testnet. Not deployed, not audited.** The design and the mechanisms are the author's. AI was
+the researcher, the economic modeller and the co-developer: writing the Solidity, each step
+tested and reviewed before the next began. What is unproven or carried as a
 known limit is in [KNOWN_ISSUES.md](KNOWN_ISSUES.md).
 
 ## What it answers

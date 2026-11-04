@@ -43,6 +43,13 @@ repository, every change to its logic included, is in Lettery TF's CHANGELOG up 
 Versions whose library instructions did not move. The compiler appends a hash of the source text
 to the runtime bytes, so a comment change still gives the library a new address when deployed.
 
+**1.1.5** Comments cut to what the code does and its traps; the design reasoning, rejected
+designs and the evidence for each claim moved to the new DESIGN.md. The "40,000 random cases"
+comment now names `sim/arc_fuzz.py` and says it checks Python against Python, with the Solidity
+tests named beside it. A figure from a model not in this repository removed. Compiled code
+identical to 1.1.4 with the metadata hash excluded, at the same sizes (1,310 runtime bytes built
+  alone, 1,464 built with the tests).
+
 **1.1.4** Comments that overstated the library corrected. The solver's arc does not choose a
 decline, but the fallback can step down once; the one-step collapse shape holds with the last
 payment passed unscaled; the $9,606.23 example is at a 29.9% return share; the sibling rule is
