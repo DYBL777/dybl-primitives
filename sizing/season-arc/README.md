@@ -91,6 +91,19 @@ included, is in Lettery TF's CHANGELOG. Where the seed and the breath behind it 
 author's words, is in [ORIGIN.md](https://github.com/DYBL777/dybl-primitives/blob/main/ORIGIN.md)
 at the root of the DYBL primitives repository.
 
+Each host carries a copy of this folder and links the library unedited. Which copy each carries:
+
+| Host                  | SeasonArc | `src/SeasonArc.sol` matches commit |
+|-----------------------|-----------|------------------------------------|
+| Lettery TF 1.4.5      | 1.1.5     | `6af3487`                          |
+| BullsTF 0.3.3         | 1.1.5     | `6af3487`                          |
+| SeedTogether 0.73     | 1.1.5     | `6af3487`                          |
+
+1.1.6 changes one comment from 1.1.5 and no code. A build of it still has different bytes, since
+the compiler records the source in the build's metadata, so a host moving to 1.1.6 deploys and
+links a new copy. A host's documents outside `src/` may differ from this folder's at the same
+version; the source is what the table compares.
+
 ## Files
 
     src/SeasonArc.sol                 the library
@@ -102,24 +115,35 @@ at the root of the DYBL primitives repository.
     test/StandInGame.sol              the smallest game that can run a season on the library
     test/StandIn.t.sol                whole seasons through that game, including a fuzzed one
     test/Invariants.t.sol             random runs of seasons, crowds and income, rules checked every draw
+    test/Exhaustive.t.sol             every call on seven grids of 40,000, against the rule coded apart
+    test/Link.t.sol                   the code hash of a build, and a host linked to an empty address
+    test/Proofs.t.sol                 symbolic proofs of the edges of size, run with Halmos
+    test/Ceiling.t.sol                very large figures, and where the arithmetic stops
+    test/Gas.t.sol                    what a call and a season cost
+    test/ArcRule.sol                  the rule coded apart from the library, used to judge answers
+    test-deployable/                  the build that deploys, tested on its own
     sim/arc_fuzz.py                   the rule reimplemented in Python across random seasons
 
 From this folder, on a fresh clone:
 
     forge install foundry-rs/forge-std@v1.16.2
     forge test
+    FOUNDRY_PROFILE=deployable forge test
     python3 sim/arc_fuzz.py
+    halmos --contract SeasonArcProofs
 
-On forge 1.5.1 with solc 0.8.24: 38 tests across 6 suites, zero failures.
+On forge 1.5.1 with solc 0.8.24: 70 tests across 11 suites, and 7 more in `test-deployable/`,
+zero failures. On Halmos 0.3.3: five proofs, all passing.
 
 **The library's size depends on what is compiled with it.** With the settings in `foundry.toml`
 (its first host's), the same source builds to 1,310 runtime bytes when the library is compiled
 on its own (`forge build --skip test`) and to 1,464 when the test files are compiled with it
-(`forge build`). The settings are identical; only the set of files in the compile differs, and
-that changes the code the compiler emits. This is also the likely cause of the
-gap seen at 1.0.0 (1,278 here, 1,432 in the host), which was not explained at the time. The
-address of a deployed copy follows from the bytes of the build that deployed it, which is why a
-host links the copy it deployed rather than a rebuild.
+(`forge build`). Run the first on a clean build (`forge clean` before it): straight after
+`forge test`, forge reuses the output it has cached and reports 1,464. The settings are identical; files that sort before `src/` in the same compile,
+as forge-std's `lib/` does, change the code the compiler emits. This is also the likely cause of the gap seen at 1.0.0 (1,278 here,
+1,432 in the host), which was not explained at the time. The address of a deployed copy follows
+from the bytes of the build that deployed it, which is why a host links the copy it deployed
+rather than a rebuild. What this means for a deployment is in KNOWN_ISSUES.
 
 ## Licence
 

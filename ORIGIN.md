@@ -34,10 +34,11 @@ prediction games. Crypto42 learned to correct itself, Pick432 first solved for t
 NearestTheETH games carried it, and BullsEth gave it its full form. They weren't lotteries, which
 is how I knew it wasn't just a lottery idea. Then the same question came back in a different shape
 for different games. A game with no end date needs to know what it can afford forever. A game with
-a last draw wants its prizes to rise toward it. A game spending a savings pot down to zero wants
-equal shares. So there are four sizing libraries, each answering that question for a different
-kind of game. Each grew out of a game, and three are in this repository so far. All of them are
-tested only in their own test suites, and none has run on a test network yet.
+a last draw wants its prizes to rise toward it, whether its money comes from tickets or from a
+savings pot being spent down to zero. So there are sizing libraries for each kind of game, and
+each grew out of a game. Two are in this repository, Breath and SeasonArc; the first, the floor by
+a deadline, stays inside BullsEthCRE for now. They are tested only in their own test suites, and
+none has run on a test network yet.
 
 I started in November 2025, and I'm about twenty contracts in. The seed and the breath grew with
 every game, in tandem with everything else they need before anyone should trust them with money:

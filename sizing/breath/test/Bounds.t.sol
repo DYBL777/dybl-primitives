@@ -18,4 +18,11 @@ contract Bounds is Base {
         vm.expectRevert(Breath.BadCover.selector);
         new BreathHost(c);
     }
+    /// @dev A slow average with no weight would never move off its first value.
+    function test_aSlowAverageWithNoWeightIsRejectedAtDeploy() public {
+        Breath.Config memory c = defaultConfig();
+        c.slowAlphaBps = 0;
+        vm.expectRevert(Breath.BadAlpha.selector);
+        new BreathHost(c);
+    }
 }

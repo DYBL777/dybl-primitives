@@ -11,3 +11,6 @@ via_ir = true
 optimizer = true
 optimizer_runs = 200
 remappings = ["forge-std/=lib/forge-std/src/"]
+
+[fuzz]
+runs = 2000

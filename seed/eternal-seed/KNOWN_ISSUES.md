@@ -6,13 +6,8 @@ limits, are in the host's repository.
 **The hosts write their own line of the rule, and it is checked through copies.** The games state
 the rule in a line of their own rather than calling these functions. `test/HostConformance.t.sol`
 fuzzes a copy of each game's line, taken from a named version, against the reference: Lettery
-Perpetual, Lettery TF and BullsEthCRE match it exactly. A copy does not follow the game, so a
-game that changes its line needs its copy updated before the check means anything.
-
-**SeedTogether does not yet match the reference on rounding.** It rounds its players' share down,
-so rounding dust stays in its pot; the reference rounds the seed down and sends the dust to
-prizes. Its seed is the reference's or exactly one unit more, and the conformance test pins that
-gap. Both conserve the pool. SeedTogether is still in development.
+Perpetual, Lettery TF, BullsEthCRE and SeedTogether match it exactly. A copy does not follow the
+game, so a game that changes its line needs its copy updated before the check means anything.
 
 **The library does not validate its inputs.** It is a pure maths reference. Formulation A reverts
 on an inverted ordering (payoutBps above maxPayoutBps) through checked arithmetic; Formulation B
@@ -29,7 +24,11 @@ is for dashboards and calibration, not solvency decisions.
 seven deliberate breaks to the library each fail at least one of them. 6 run a stand-in game over
 ten years of weekly draws on flat income. 5 check the games' own lines. 5 are invariants, checked
 after every call while the stand-in game runs random sequences of draws and droughts under both
-rules. `test/Proofs.t.sol` holds three symbolic proofs, run with Halmos rather
-than forge: Flow conserves the pool, the clamp at 100%, and headroom plus floor equals the pot.
+rules. `test/Proofs.t.sol` holds three symbolic proofs, run with Halmos rather than forge
+(`halmos --contract EternalSeedProofs`; a bare `halmos` also picks up the invariant suites): Flow conserves the pool, the clamp at 100%, and headroom plus floor equals the pot.
 Claims that need the solver to reason through multiplication and division together did not finish
-in its time limit and rest on the fuzz and invariant tests. Not audited. Not deployed.
+in its time limit and rest on the fuzz and invariant tests. Mutation testing with Gambit 0.2.1
+(Certora's tool, default operators): 62 mutants compile and the suite catches 61. The one it
+misses removes the `seedBps >= BPS_DENOM` guard in `distributable()`, which the NatSpec there
+describes as deliberate redundancy: without it the subtraction gives 0 as well. Not audited. Not
+deployed.

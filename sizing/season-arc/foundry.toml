@@ -11,6 +11,16 @@ via_ir = true
 optimizer = true
 optimizer_runs = 1
 remappings = ["forge-std/=lib/forge-std/src/"]
+# Test runs only: test/Exhaustive.t.sol walks 40,000 calls in one test, far past the default
+# block gas limit. This does not touch the library's compiled bytes.
+gas_limit = "9223372036854775807"
 
 [fuzz]
 runs = 256
+
+# The build that deploys: the library with nothing sorting before src/ in the compile (KNOWN_ISSUES).
+# Run with FOUNDRY_PROFILE=deployable forge test
+[profile.deployable]
+test = "test-deployable"
+out = "out/deployable"            # its own build, so the main build's copy of the library is not reused
+cache_path = "cache/deployable"

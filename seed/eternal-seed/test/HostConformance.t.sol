@@ -30,7 +30,8 @@ contract HostConformanceTest is Test {
         prizes = amount - seed;
     }
 
-    /// Lettery TF 1.2.1, LetteryTF.sol, the prize-sizing step (withheld on every draw):
+    /// Lettery TF 1.2.1, LetteryTF.sol, the prize-sizing step (withheld on every draw), and
+    /// unchanged at 1.4.3:
     ///   currentSeedReturn = (amount * split.reseedBps) / BPS;
     function _tf(uint256 amount, uint256 reseedBps) internal pure returns (uint256 seed, uint256 prizes) {
         seed = (amount * reseedBps) / BPS;
@@ -46,13 +47,15 @@ contract HostConformanceTest is Test {
         afterSeed = weeklyPool - seed;
     }
 
-    /// SeedTogether 0.65, SeedTogether.sol, the draw request:
-    ///   uint256 toPlayers = m == 1 ? payout : payout * PLAYER_BPS / BPS;   (PLAYER_BPS = 8000)
-    ///   seedPot -= toPlayers;
-    /// The players' share is rounded down and what is left stays in the pot as the seed.
-    function _seedTogether(uint256 payout, bool finalDraw) internal pure returns (uint256 seed, uint256 prizes) {
-        prizes = finalDraw ? payout : payout * 8_000 / BPS;
-        seed = payout - prizes;
+    /// SeedTogether 0.73, SeedTogether.sol, _size:
+    ///   s.toReserve = s.sized * RESEED_BPS / BPS;   (RESEED_BPS = 2000)
+    ///   uint256 paid = s.sized - s.toReserve + out;
+    /// A fifth of the amount sized is held back, rounded down, and the players take the rest
+    /// (plus what the reserve releases, which is outside the seed rule). The closing draw holds
+    /// nothing back.
+    function _seedTogether(uint256 sized, bool finalDraw) internal pure returns (uint256 seed, uint256 prizes) {
+        seed = finalDraw ? 0 : sized * 2_000 / BPS;
+        prizes = sized - seed;
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -88,29 +91,23 @@ contract HostConformanceTest is Test {
         assertEq(afterSeed, EternalSeed.distributable(weeklyPool, 1000), "what the seed leaves");
     }
 
-    /// @notice SeedTogether rounds the other way, as its KNOWN_ISSUES entry says: its seed is
-    ///         the reference's seed or exactly one unit more, and it is one more exactly when
-    ///         the payout times the seed share is not a whole multiple of 10,000. Both conserve
-    ///         the payout. Its final draw matches the reference at a seed share of zero.
-    function testFuzz_seedTogetherDiffersByTheKnownUnit(uint256 payout, bool finalDraw) public pure {
-        payout = bound(payout, 0, MAX_AMOUNT);
-        (uint256 seed, uint256 prizes) = _seedTogether(payout, finalDraw);
-        assertEq(seed + prizes, payout, "conserves the payout");
-        if (finalDraw) {
-            assertEq(seed, EternalSeed.seedReturn(payout, 0), "final draw seeds nothing");
-            return;
-        }
-        uint256 ref = EternalSeed.seedReturn(payout, 2_000);
-        uint256 expectedGap = (payout * 2_000) % BPS == 0 ? 0 : 1;
-        assertEq(seed - ref, expectedGap, "one unit more, exactly when there is a remainder");
+    /// @notice SeedTogether matches the reference exactly at its seed share of a fifth, and its
+    ///         closing draw matches the reference at a seed share of zero.
+    function testFuzz_seedTogetherMatches(uint256 sized, bool finalDraw) public pure {
+        sized = bound(sized, 0, MAX_AMOUNT);
+        uint256 s = finalDraw ? 0 : 2_000;
+        (uint256 seed, uint256 prizes) = _seedTogether(sized, finalDraw);
+        assertEq(seed, EternalSeed.seedReturn(sized, s), "seed");
+        assertEq(prizes, EternalSeed.distributable(sized, s), "prizes");
     }
 
-    /// @notice The gap in a worked case, so the direction is visible without a fuzzer.
+    /// @notice The rounding in a worked case: the odd unit goes to the players, as in the
+    ///         reference. SeedTogether 0.65 kept it in the seed.
     function test_seedTogetherWorkedExample() public pure {
         (uint256 seed, uint256 prizes) = _seedTogether(10_001, false);
-        assertEq(seed, 2_001, "SeedTogether keeps the odd unit");
-        assertEq(prizes, 8_000, "and pays 8,000");
-        assertEq(EternalSeed.seedReturn(10_001, 2_000), 2_000, "the reference keeps 2,000");
-        assertEq(EternalSeed.distributable(10_001, 2_000), 8_001, "and pays 8,001");
+        assertEq(seed, 2_000, "SeedTogether holds back 2,000");
+        assertEq(prizes, 8_001, "and pays 8,001");
+        assertEq(EternalSeed.seedReturn(10_001, 2_000), seed, "the reference's seed");
+        assertEq(EternalSeed.distributable(10_001, 2_000), prizes, "the reference's prizes");
     }
 }

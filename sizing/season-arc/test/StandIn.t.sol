@@ -73,7 +73,7 @@ contract StandInSeasons is Test {
         uint256 seed, uint256 draws, uint256 openingBps, uint256 returnBps
     ) public {
         draws = bound(draws, 2, 104);
-        openingBps = bound(openingBps, 1_000, 5_000);
+        openingBps = bound(openingBps, 1, 10_000);
         returnBps = bound(returnBps, 0, 5_000);
         StandInGame g = new StandInGame(draws, openingBps, returnBps);
         for (uint256 d = 1; d <= draws; d++) {

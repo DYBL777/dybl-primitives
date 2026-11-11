@@ -37,7 +37,8 @@ Retention across, how the season ends down:
 | **Return**     | open              | Lettery TF, BullsEthCRE     |
 
 What each draw pays is a separate question, answered by the sizing solvers in
-[../../sizing](../../sizing).
+[../../sizing](../../sizing). What the rule is for, the two ways of holding money back, the four
+endings and where each game sits are in [DESIGN.md](DESIGN.md).
 
 ## The stand-in game
 

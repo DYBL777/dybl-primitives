@@ -44,7 +44,7 @@ contract ArcHandler is Test {
 
     /// @dev Start a fresh season with random length, opening share and return share.
     function startSeason(uint8 drawsSeed, uint16 openingSeed, uint16 returnSeed) external {
-        _newSeason(bound(drawsSeed, 2, 104), bound(openingSeed, 1_000, 5_000), bound(returnSeed, 0, 5_000));
+        _newSeason(bound(drawsSeed, 2, 104), bound(openingSeed, 1, 10_000), bound(returnSeed, 0, 5_000));
     }
 
     /// @dev The crowd changes size: from nobody to three times the usual.

@@ -4,12 +4,12 @@ pragma solidity ^0.8.24;
 import {Test} from "forge-std/Test.sol";
 import {EternalSeed} from "../src/EternalSeed.sol";
 
-/// @notice Symbolic proofs, run with Halmos (`halmos`), not with `forge test`. Each `check_`
-///         function is proved for every input in its stated range, not sampled like a fuzz
-///         test; forge ignores them. Claims that need the solver to reason through
-///         multiplication and division together (for example that the seed is no larger than
-///         the pool) did not finish in the solver's time limit and are covered by the fuzz and
-///         invariant tests instead.
+/// @notice Symbolic proofs, run with Halmos (`halmos --contract EternalSeedProofs`), not with
+///         `forge test`. Each `check_` function is proved for every input in its stated range,
+///         not sampled like a fuzz test; forge ignores them. Claims that need the solver to
+///         reason through multiplication and division together (for example that the seed is
+///         no larger than the pool) did not finish in the solver's time limit and are covered
+///         by the fuzz and invariant tests instead.
 contract EternalSeedProofs is Test {
     uint256 internal constant D = 10_000;
 

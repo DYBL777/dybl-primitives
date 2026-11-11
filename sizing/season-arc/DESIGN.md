@@ -7,9 +7,8 @@ is for, what was tried and rejected, and where each claim is tested.
 ## The problem
 
 A pot of money must be paid out over a season with a known last draw, decided by the contract
-rather than a person. This is one form of the Autonomous Distribution Rate Problem (ADRP):
-paced, autonomous distribution from a fixed-term pot. The pot keeps being fed during the season,
-because tickets keep being sold, and nobody knows in advance how many.
+rather than a person: automatic distribution from a fixed-term pot. The pot keeps being fed
+during the season, because tickets keep being sold, and nobody knows in advance how many.
 
 The library aims at three things together:
 
@@ -43,8 +42,9 @@ a ticket from the start. Force a real opening onto an equal-share rule and a lar
 is spent early, after which equal shares fall rather than rise. Growing from the last payment
 and solving for the ending gives both a real opening and a rise.
 
-**Chosen over.** The equal-share glide. It is a sound rule for yield-funded pots and lives in
-this family under its own name, SeedGlide.
+**Chosen over.** The equal-share glide. It suits a pot that can open small. SeedTogether, a
+yield-funded game, began on it and now sizes its draws with this library; it keeps an equal-share
+release for the reserve it holds back.
 
 ### Re-solve `g` every draw
 
@@ -147,12 +147,13 @@ that ceiling rather than the solved answer.
 
 ### The last draw's returned share is left out of the forecast
 
-**Rule.** The forward walk takes back no returned share on the last remaining draw.
+**Rule.** The forward walk takes back no returned share after the last remaining draw.
 
-**Why.** It is a modelling choice, not a description of any host. It makes every solve forecast
-slightly less money than may arrive, which can only make the arc shallower and leave more for the
-end. It tilts money a little from the weekly prizes toward the ending. Changing it would change
-what the solver pays for every host, so it is left alone and recorded in KNOWN_ISSUES.
+**Why.** Nothing is paid after the last draw, so a share returned then could fund nothing the
+walk is testing. It also changes no answer: the solver asks only whether the walk ends with
+something left, and a walk that gets past its last payment ends with at least one unit either
+way, because that payment must be strictly under the balance before it. Mutations that add the
+share back on the last draw too give the shipped answers on every test (see Evidence).
 
 ### Deployed once and linked
 
@@ -180,9 +181,8 @@ idea in finance. SeasonArc is a growing annuity that re-solves its own growth ra
 from the live pot and the income just observed, with no one setting it. It is also close to an
 amortisation schedule that re-derives itself each period.
 
-Its siblings answer the same question for different endings. BreathEngine holds a floor to a
-deadline, Breath sustains a pool with no end date (its closest older relative is the endowment
-spending rule, such as Yale's), and SeedGlide spends to zero in equal shares.
+Its sibling, Breath, answers the same question for a pool with no end date (its closest older
+relative is the endowment spending rule, such as Yale's).
 
 ## Evidence
 
@@ -201,3 +201,10 @@ Where each claim above is checked.
 | The bisection undershot at very large figures | `sim/arc_fuzz.py`, at a pot of 1e30 |
 | No draw pays more than the pot, and the last draw empties it, checked after every draw of random seasons | `test/Invariants.t.sol` |
 | The two input guards and the zero-draws case | `test/SeasonArc.t.sol` |
+| The edges of `size`, for every input in range: the last draw pays the whole pot, the first pays exactly its share, no draws left pays nothing, and both guards refuse | `test/Proofs.t.sol`, five Halmos proofs. The search for a mid-season payment is too deep for the prover. |
+| Every call on seven grids of 40,000 (pots of 1 to 40 units, and of 1,000 to 40,000 USDC, up to 52 draws left): under the pot; the arc paid survives and no larger arc payment does; the fallback fires only when flat at the last payment runs dry, and pays the largest flat payment that survives | `test/Exhaustive.t.sol`, judged by the rule coded apart from the library in `test/ArcRule.sol` |
+| The same, on five of the grids, for the build that deploys (the library compiled with nothing sorting before it) | `test-deployable/DeployableBuild.t.sol`, run with `FOUNDRY_PROFILE=deployable forge test`; it also checks the library under test is the 1,310-byte build |
+| Pots from 5e14 to 1e60 answer by the rule; a pot of 1e71 answers and 1e72 reverts | `test/Ceiling.t.sol` |
+| The gas figures in KNOWN_ISSUES | `test/Gas.t.sol` |
+| Every deployed copy of one build has the same code hash, and a host linked to an empty address reverts rather than paying zero | `test/Link.t.sol` |
+| The tests catch broken code | Mutation testing with Gambit 0.2.1 (Certora's tool, default operators) on `src/SeasonArc.sol`: 253 mutants compile and the suite catches 233. The 20 it misses gave the shipped answers on every test, as the reason for each expects: they alter the solver's early exit without changing when it stops (2), move the fallback's first guess by a unit, which its correction search absorbs (8), widen that correction band (2), add the returned share back on the last draw (5), or drop or widen a check whose case the code after it already gets right (3). |

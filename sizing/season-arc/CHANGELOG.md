@@ -1,6 +1,9 @@
 # CHANGELOG: SeasonArc
 
-Newest first. Versions follow MAJOR.MINOR.PATCH. The solver's history before it had its own
+Current version: 1.1.6. Code changes are listed first, newest first; versions that changed only
+comments or documentation (1.1.1 to 1.1.6) are summarised after them.
+
+Versions follow MAJOR.MINOR.PATCH. The solver's history before it had its own
 repository, every change to its logic included, is in Lettery TF's CHANGELOG up to version 0.998.
 
 **[1.1.0]** PROBLEM: the fallback was entered whenever the solver returned its floor, and the
@@ -26,6 +29,26 @@ repository, every change to its logic included, is in Lettery TF's CHANGELOG up 
 
 ---
 
+**Tests added after 1.1.6** (library unchanged). PROBLEM: the library accepts an opening of 0% to
+  100%, but the suites fuzzed it only from 10% to 50%, and no test measured what a shrinking crowd
+  or money already in the pot does at a given opening. SOLUTION: `test/Opening.t.sol`, 17 tests:
+  a steady season at openings from 0.01% to 100%; the highest opening a steady shrink, a longer
+  season and a sudden exodus each allow without a draw paying less than the one before, pinned
+  from both sides; a fuzzed check that players leaving does not lower the prize per ticket; a
+  carried seed at a high opening, with and without a host-side cap on the opening; the same crowds
+  with the last payment scaled by the crowd, as Lettery TF passes it; a zero opening and one that
+  rounds to nothing; a late outflow from the pot. `test/StandIn.t.sol` and
+  `test/Invariants.t.sol` now fuzz the opening from 0.01% to 100%.
+
+**Tests added with 1.1.6** (library instructions unchanged): `test/Proofs.t.sol`, five Halmos
+  proofs of the edges of `size`; `test/Exhaustive.t.sol`, seven grids of 40,000 calls checked
+  against the rule coded apart from the library; `test/Link.t.sol`, one code hash per build and a
+  host linked to an empty address reverting; `test/Gas.t.sol`, the gas figures KNOWN_ISSUES quotes,
+  now asserted; `test/Ceiling.t.sol`, pots from 5e14 to 1e60 and the point where the arithmetic
+  overflows; `test-deployable/`, the build that deploys, run on its own. The grids catch six
+  mutations of the fallback's correction band, and the gas test three of the solver's early exit,
+  that the suite before them missed. Mutation-testing result in DESIGN.md.
+
 **Tests added without a change to the library** (library unchanged at 1.1.4): `test/Invariants.t.sol`, an
   invariant suite running seasons of random length, opening and return shares through the
   stand-in game, with crowds that arrive, leave or stop buying. After every draw it checks that no
@@ -40,15 +63,24 @@ repository, every change to its logic included, is in Lettery TF's CHANGELOG up 
 
 ## Comments and documentation
 
+**After 1.1.6.** KNOWN_ISSUES names all three ways a last payment of zero can reach the library
+mid-season, each of which makes the next draw an opening again.
+
 Versions whose library instructions did not move. The compiler appends a hash of the source text
 to the runtime bytes, so a comment change still gives the library a new address when deployed.
+
+**1.1.6** The comment on the last-draw line in `_leftover`, KNOWN_ISSUES and DESIGN.md said that
+leaving the returned share out after the last draw made the arc shallower and changed what the
+solver pays. It changes no answer: every caller asks only whether the walk ends above zero. The
+comment and DESIGN.md now say so, and the KNOWN_ISSUES entry is gone. KNOWN_ISSUES now says which
+build to deploy from, and why. Compiled code identical to 1.1.5 with the metadata hash excluded.
 
 **1.1.5** Comments cut to what the code does and its traps; the design reasoning, rejected
 designs and the evidence for each claim moved to the new DESIGN.md. The "40,000 random cases"
 comment now names `sim/arc_fuzz.py` and says it checks Python against Python, with the Solidity
 tests named beside it. A figure from a model not in this repository removed. Compiled code
 identical to 1.1.4 with the metadata hash excluded, at the same sizes (1,310 runtime bytes built
-  alone, 1,464 built with the tests).
+alone, 1,464 built with the tests).
 
 **1.1.4** Comments that overstated the library corrected. The solver's arc does not choose a
 decline, but the fallback can step down once; the one-step collapse shape holds with the last

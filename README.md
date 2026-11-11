@@ -2,28 +2,27 @@
 
 Protect it, grow it, pace it.
 
-Solidity libraries for games and savings products that hold a pot of money. One question runs
-through all of them: how to make the pot bigger, and then what a big pot should do. The seed
-decides how much of the pot is kept back; the sizing solvers decide how much each payout is.
+Solidity libraries for games and savings products that hold a pot of money: capital retention
+and automatic distribution. The seed decides how much of the pot is kept back; the sizing
+solvers decide how much each payout is.
 
-The sizing solvers answer what we call the Autonomous Distribution Rate Problem (ADRP): how much
-a pot should pay out each period, decided by the contract rather than a person. BreathEngine,
-Breath and SeasonArc answer it for different endings; SeedGlide, to come, is the fourth.
+The sizing solvers are an automatic distribution system: they decide, from the pot itself, how
+much a game pays each draw, with no one setting the rate. Breath and SeasonArc do it for two
+endings: a pool with no end date, and a season with a last draw.
 
 **Pre-testnet. Not deployed, not audited.** Each library's known limits are in its own
 KNOWN_ISSUES.md.
 
 Where the ideas came from is in [ORIGIN.md](ORIGIN.md). The library names are working names,
-open to change. Earlier posts called EternalSeed the Compounding Reserve and BreathEngine the
-Solvency Autopilot.
+open to change. Earlier posts called EternalSeed the Compounding Reserve and the first sizing
+solver, BreathEngine, the Solvency Autopilot. BreathEngine, which holds a floor to a deadline,
+stays inside [BullsEthCRE](https://github.com/DYBL777/BullsEthCRE) for now.
 
 | Library      | Folder                                       | Answers                                 | First host                           |
 |--------------|----------------------------------------------|-----------------------------------------|--------------------------------------|
 | EternalSeed  | [seed/eternal-seed](seed/eternal-seed)       | how much of the pot is kept back        | written into each game, not imported |
-| BreathEngine | [sizing/breath-engine](sizing/breath-engine) | reach a floor by a deadline             | BullsEthCRE                          |
 | Breath       | [sizing/breath](sizing/breath)               | what a pool with no end date can afford | Lettery Perpetual                    |
 | SeasonArc    | [sizing/season-arc](sizing/season-arc)       | a rising arc to the last payout         | Lettery TF                           |
-| SeedGlide    | sizing/seed-glide (to come)                  | equal shares down to zero               | SeedTogether                         |
 
 Each folder is its own Foundry project, built with the same compiler settings as its first host,
 so the library tested here is the one that host carries. To test one:
@@ -49,8 +48,8 @@ maths. The games around them do need outside services, and for those we use and 
 Chainlink: the lottery games draw winners with Chainlink VRF, and BullsEthCRE runs on Chainlink
 CRE with Chainlink price feeds.
 
-**Compiled in, or deployed once.** All four libraries are written to be reused; they differ in
-how a game uses them. EternalSeed, Breath and BreathEngine are internal: each game compiles its
+**Compiled in, or deployed once.** All three libraries are written to be reused; they differ in
+how a game uses them. EternalSeed and Breath are internal: each game compiles its
 own copy, which costs no outside call and needs no trusted address. SeasonArc is external: it is
 deployed once and linked, to keep its first game's contract smaller. A linked game runs whatever
 code sits at the address it was linked to, so that address is checked at deployment. Breath
@@ -58,15 +57,18 @@ could be linked the same way if a game needs the space.
 
 **How the code was checked.** The Solidity was written with AI assistance, so the tests are the
 evidence. Tests are named for the claims they check; deliberate breaks to each library were used
-to show the tests catch them; Breath compiles to the same code as its first game's copy; and
-BreathEngine's answers match its first game's solver across fuzzed inputs, except at one
-documented boundary. EternalSeed's tests also check each game's own seed line against it.
+to show the tests catch them; Breath compiles to the same code as the copy in its first game,
+Lettery Perpetual 0.60. EternalSeed's tests also check each game's own seed line against it.
 
 **Beyond single calls.** Every library here has an invariant suite: Foundry drives random
 sequences of draws, droughts, crowds and seasons and checks the library's rules after every call.
 Each suite was run against deliberately broken copies of its library to show it catches them.
-EternalSeed and BreathEngine also carry a few symbolic proofs, run with Halmos, for rules simple
-enough for the solver to prove for every input.
+EternalSeed, Breath and SeasonArc also each run on a stand-in game, the smallest game that can
+hold a pot on the library, through whole seasons or years with named outcomes.
+EternalSeed and SeasonArc also carry a few symbolic proofs, run with Halmos, for
+rules simple enough for the solver to prove for every input. SeasonArc's tests also check every
+call on grids of 40,000. Every library's suite was scored by mutation testing with Gambit; each
+KNOWN_ISSUES (DESIGN.md for SeasonArc) gives the result and what the surviving mutants change.
 
 **Not done yet.** No external audit and no test-network deployment. No formal verification of the
 solvers' search or projection, which is too deep for the symbolic tools used here.

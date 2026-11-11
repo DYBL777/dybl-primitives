@@ -47,7 +47,7 @@ abstract contract Base is Test {
     // not the shipped game's figures. Recomputed here from the split so it cannot drift again:
     //   floor + jackpotBps * missToPotBps * missRate, all in bps.
     // At the shipped split (2,000 floor, 3,300 jackpot, 3,000 miss-to-pot) and the ~83% miss
-    // rate a million-ticket field produces, that is 2,000 + 3,300*3,000*8,300/1e8 = 2,822.
+    // rate a million-ticket field produces, that is 2,000 + 3,300*3,000*8,300/1e8 = 2,821 (rounded down).
     uint256 internal constant MISS_RATE_BPS = 8_300;      // ~83%, uniform picks at 1M tickets
     uint256 internal constant RHO =
         2_000 + (3_300 * 3_000 * MISS_RATE_BPS) / (10_000 * 10_000);

@@ -18,7 +18,9 @@ known limit is in [KNOWN_ISSUES.md](KNOWN_ISSUES.md).
 
     amount    what this draw may pay
     bind      which rule decided it: FLOOR, CREEP, BREAKEVEN, RISE_RAIL, FALL_RAIL, POT or DUST
-              (a game not yet started, or an empty pot, reports DUST)
+              (a game not yet started, or an empty pot, reports DUST; with no income and
+              minDraw at zero, a payout of 0 can come back as CREEP, so a host tests the
+              amount, not the bind, to spot a draw that pays nothing)
 
 The host also calls `observe(net)` once per draw to fold that draw's income into two running
 averages, and `commit(paid)` to record the regular prize the next draw steps from. `spare()` is
@@ -52,9 +54,8 @@ anything happens. It returns an amount; the host decides how that amount is spli
 
 ## Siblings
 
-Breath is one of four sizing solvers, each for a different ending: BreathEngine (reach a floor by
-a deadline), Breath (no end date), SeasonArc (a rising arc to the last draw) and SeedGlide
-(equal shares down to zero).
+Breath is one of two sizing solvers here, each for a different ending: Breath (no end date) and
+SeasonArc (a rising arc to the last draw).
 
 ## Prior art
 
@@ -77,3 +78,12 @@ its observed jackpot miss rate.
     forge test
 
 Compiler settings match the first host's, so the library tested here is the one it carries.
+The dial values in the tests are Lettery Perpetual's; the model they were chosen on is `sim/` in
+that game's repository.
+
+`test/StandInGame.sol` is the smallest game that runs on Breath: a pot, income and yield each
+draw, the payout Breath sizes, and `spare()` offered on a fixed rhythm. `test/StandIn.t.sol`
+runs it for up to twenty years: a flat book opening at the floor and staying under breakeven,
+payouts inside the rails over random income, a collapse gliding down on the fall rail, a pot
+that `spare()` levels off where one nothing spends keeps growing, and a draw refused as dust
+leaving the last real prize as the next draw's starting point.

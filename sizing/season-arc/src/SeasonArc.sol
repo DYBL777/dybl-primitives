@@ -210,9 +210,8 @@ library SeasonArc {
             pay = (pay * g) / BPS;
             if (pay >= p) return 0;      // ran dry: this g is too steep
             p -= pay;
-            // NO RETURN ON THE LAST DRAW, DELIBERATELY. A modelling choice that under-counts
-            // the pot by one returned share and leans the arc slightly shallow. Changing it
-            // changes what the solver pays for every host (KNOWN_ISSUES).
+            // No return after the last draw: nothing is paid after it. Adding it would change no
+            // answer, since every caller asks only whether the walk ends above zero (DESIGN.md).
             // Multiply before dividing, deliberately: dividing first floors returnBps / BPS to
             // zero. A linter may flag this shape; it is correct here.
             if (k + 1 < drawsLeft) p += (pay * returnBps) / BPS;

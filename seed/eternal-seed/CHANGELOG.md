@@ -1,5 +1,7 @@
 # EternalSeed.sol changelog
 
+Current version: 2.0.
+
 Newest first. Code and test changes are listed individually. Documentation-only versions are
 summarised at the end.
 
@@ -11,6 +13,13 @@ behaviour the documentation describes.
 ---
 
 ## Code and tests
+
+**Tests changed after 2.0**, library unchanged. PROBLEM: the conformance copy of SeedTogether's
+line was taken from 0.65, which rounded the players' share down and kept the odd unit in the seed.
+SeedTogether has since changed its line; the test still passed, but against a version no longer
+current. SOLUTION: the copy is taken from SeedTogether 0.73, which holds back a fifth of each draw
+rounded down, as the reference does. It now matches exactly, and the test that pinned the
+one-unit gap checks the match instead.
 
 ### 2.0
 
@@ -64,6 +73,16 @@ projectedSeedContribution().
 ---
 
 ## Documentation versions (no change to compiled code)
+
+**2.0, later.** The sizing solvers list names the two in this repository, Breath and SeasonArc.
+The equal-share solver once listed for SeedTogether is removed, since SeedTogether now sizes its
+draws with SeasonArc, and the floor-by-a-deadline solver stays inside BullsEthCRE. The Spend-down
+row and the paragraph on choosing a spend-down solver reworded to match. References to
+libraries and a repository that are not published here are removed, the compiler version is
+pinned at 0.8.24 as in the other libraries, and the Halmos command names its contract. The
+design map (what "eternal" means, the two retention rules, the four endings, the grid, the
+compositions and the lineage) moves from the library's header to DESIGN.md; the header keeps
+what the code does and its traps.
 
 **2.0.** Header rebuilt around two axes, retention (Floor, Flow) and ending (Compound, Port,
 Spend-down, Return), replacing seventeen numbered variants. The seed is defined as the pot under a

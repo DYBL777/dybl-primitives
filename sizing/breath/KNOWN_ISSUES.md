@@ -33,15 +33,23 @@ through spare() or its own rule.
 **Call order is the host's responsibility.** observe() is called once per draw from one site;
 calling it twice weights that draw double. commit() records only the regular weekly prize. A
 boost or any other extra payout committed there would become the next draw's starting point, and
-the fall rail would then hold the prize up after the extra payment had passed.
+the fall rail would then hold the prize up after the extra payment had passed. A draw that pays
+nothing (refused as dust, an empty pot, or no income with minDraw at zero, which reports CREEP)
+is not committed either: committing zero clears the
+starting point the rails measure from, so the next draw could jump.
 
 **Each host compiles its own copy.** Every function is internal, so the library is compiled into
 each host rather than deployed once and linked. Two hosts built with different compiler settings
 carry different bytecode for the same source.
 
-**Coverage.** 25 library-level tests through a stand-in host. Mutation-checked: twelve deliberate
-breaks to the library, plus a reordering of the payout steps, each fail at least one of the first
-20. The other 5 are invariants, checked after every draw while a minimal game runs random
-sequences of draws, droughts and surges: no payout exceeds the pot, no dust is paid, both rails
-hold and every unit is accounted for. Removing the rise rail, the fall rail, the pot cap or the
-dust guard each fails them. Not audited. Not deployed.
+**Coverage.** 42 library-level tests through stand-in hosts; 8 of them run whole games on
+`test/StandInGame.sol`, from twenty years of a flat book to a collapse and a refused draw.
+Twelve deliberate breaks to the library, plus a reordering of the payout steps, each fail at
+least one of them. 5 are invariants,
+checked after every draw while a minimal game runs random sequences of draws, droughts and surges:
+no payout exceeds the pot, no dust is paid, both rails hold and every unit is accounted for.
+Removing the rise rail, the fall rail, the pot cap or the dust guard each fails them. Mutation
+testing with Gambit 0.2.1 (Certora's tool, default operators): 355 mutants compile and the suite
+catches 354. The one it misses removes the check that the trend band's low end is under its high
+end, which the next check (the band must straddle parity) already implies. Not audited. Not
+deployed.

@@ -5,7 +5,7 @@
 // Change Date:    1 February 2030
 // Change License: MIT
 
-pragma solidity ^0.8.24;
+pragma solidity 0.8.24;
 
 /**
  * @title  EternalSeed
@@ -18,54 +18,18 @@ pragma solidity ^0.8.24;
  *         period. Hold something back and the next period does not start from zero.
  *
  *         This file is the reference for that rule: four short functions that state it
- *         exactly, a projection helper, and a map of the ways the rule has been used. The
- *         functions are internal, so a host compiles them in rather than calling a deployed
- *         copy, and the hosts in this suite write their own one-line version of the rule
- *         instead. They are meant to share its behaviour. The test suite beside this file
- *         pins the reference's behaviour and checks a copy of each host's line against it;
- *         known differences are listed in KNOWN_ISSUES.md.
- *
- *         WHAT "ETERNAL" MEANS
- *
- *         Eternal describes the pot, not an amount. The name came from the growth: a
- *         lottery that keeps a share back every week starts the next week above zero, so
- *         the pot compounds instead of resetting. It was never a claim that some balance
- *         sits untouchable forever. Whether a pot can literally be eternal is a question
- *         the hosts answer differently, and one of them answers no. See ENDINGS.
- *
- * @dev    TWO AXES
- *
- *         Earlier versions of this file listed seventeen numbered variants. Most were one
- *         mechanism at a different setting, and the numbering collided with a superseded
- *         reference repository that used the same numbers for different mechanisms. The
- *         design space is described better by two independent questions.
- *
- *         RETENTION asks how money is held back. Two answers: Floor and Flow.
- *         ENDING asks what the held-back money is for and where it finishes. Four answers:
- *         Compound, Port, Spend-down and Return.
- *
- *         Any retention rule can carry any ending. The suite has moved along the ending
- *         axis while retention stood still, which is why the old list kept filing endings
- *         as retention variants and never sat right.
- *
- * @dev    RETENTION: FLOOR (FORMULATION A)
- *
- *         A fraction of the pot cannot be distributed while the game or season runs. It
- *         stays in the pot, earning yield where the host supplies it to a lender, and is
- *         released through the host's defined exits. This was the first form of the idea.
- *         Functions: maxDistributable(), seedFloor().
- *
- *         CEILING POLICY. The ceiling maxPayoutBps may be fixed at deployment, adjustable
- *         by an owner within a committed maximum, or scheduled to rise over time. Each
- *         changes who may move the ceiling and how fast; none changes the mechanism.
- *         The suite's SeedRelease library, separate from this one, implements a bounded
- *         ratchet for the adjustable case.
+ *         exactly, and a projection helper. What the rule is for, the ways it has been used
+ *         and where each game sits are in DESIGN.md beside this file. The functions are
+ *         internal, so a host compiles them in rather than calling a deployed copy, and the
+ *         hosts in this suite write their own one-line version of the rule instead. They are
+ *         meant to share its behaviour: the test suite beside this file pins the reference's
+ *         behaviour and checks a copy of each host's line against it.
  *
  * @dev    FORMULATION A SEMANTICS (payoutBps AND THE TWO FLOORS)
  *
- *         payoutBps is the distribution rate currently committed by the host,
- *         governed within [0, maxPayoutBps] (see CEILING POLICY). maxPayoutBps is the season
- *         ceiling: the largest fraction of the pot that governance can ever
+ *         payoutBps is the distribution rate currently committed by the host, governed
+ *         within [0, maxPayoutBps] (see the ceiling policy in DESIGN.md). maxPayoutBps is
+ *         the season ceiling: the largest fraction of the pot that governance can ever
  *         schedule for distribution.
  *
  *         Two distinct quantities follow. Do not conflate them.
@@ -100,150 +64,6 @@ pragma solidity ^0.8.24;
  *         Integrators needing the invariant floor must CALL seedFloor(pot, 0,
  *         maxPayoutBps) rather than reimplement the formula.
  *
- * @dev    RETENTION: FLOW (FORMULATION B)
- *
- *         A share of each prize returns to the pot instead of being paid out, so the pot
- *         compounds period on period. The seed here is not a floor; it is an engine.
- *         Functions: seedReturn(), distributable().
- *
- *         RATE POLICY. The returning share seedBps may be fixed, adjustable under a
- *         timelock, scheduled to fall or rise across a season, gated on participation,
- *         set per prize tier, or suspended once the pot reaches a ceiling. Each is the
- *         same mechanism on a different schedule.
- *
- *         WHAT ACTUALLY RETURNS. seedBps is not the whole of it. When a top prize goes
- *         unwon, some of that prize also comes back to the pot, so the true returning
- *         share is the reseed plus the routed part of missed prizes. Measuring it from
- *         money flows misleads, because a rolled jackpot looks permanently retained until
- *         somebody wins it; counting how often prizes are missed does not. Two host shapes
- *         call for two answers, and both are correct:
- *           A perpetual host has no end date to re-anchor against, so it measures the
- *           miss rate as it runs. Lettery Perpetual does this through Rho.sol, where the
- *           returning share is reseed + jackpotShare * missToPot * missRate.
- *           A season host knows its routing at deployment and sizes every draw from the
- *           pot it actually holds, so it can compute the share once, at the miss-always
- *           limit, and any error does not carry forward. In Lettery TF this is RETURN_BPS:
- *           the 20% reseed withheld from every prize, plus 30% of the jackpot tier's share
- *           of a prize when the jackpot is missed. At the shipped split that is 20 points
- *           plus 9.9 points, 29.9% in all. It leaves out money a draw returns on its own:
- *           a bottom tier nobody wins, a tier too thin to pay and rounding dust all go
- *           back to the pot, so the forecast sits on the low side.
- *
- * @dev    ENDINGS: WHAT THE SEED IS FOR
- *
- *         COMPOUND. The pot has no end date, so the seed's job is to keep it growing and
- *         the payout rule must be affordable indefinitely. Lettery Perpetual.
- *
- *         PORT. What accumulates in one season becomes the opening position of the next,
- *         so a season's players are funding the next season rather than losing their
- *         contribution at the close. Specified, not yet built.
- *
- *         SPEND-DOWN. The pot is aimed at zero by a known last draw, with the largest
- *         payments near the end. SeedTogether, where the seed and the tank being spent are
- *         one balance.
- *
- *         RETURN. The season ends on a known draw, and what the season did not pay out as
- *         prizes is handed back to those who funded it: per ticket in Lettery TF, by
- *         seniority in BullsEthCRE. BullsEthCRE's order is the investor's unreleased seed
- *         first, then committed players up to their promised return, with anything above
- *         that going to the treasury (all of it, if no committed player qualifies). Its
- *         sizing solver holds the pot above that obligation to the last draw, and the last
- *         draw pays out everything above it.
- *
- *         BALLAST. In the Spend-down and Return rows the seed's job changes. It is not
- *         growing the pot toward an open future; it is holding the shape of a pot being
- *         spent on purpose, so that the season reaches its last draws with the largest
- *         payments still ahead of it. The sizing solver treats the returning share as
- *         known and aims through it (SeasonArc's returnBps input).
- *
- *         THREE ANSWERS TO "ETERNAL". Lettery Perpetual never ends, so its pot is eternal
- *         in the plain sense. The port carries a pot across a boundary, so it is eternal
- *         by becoming the next one. SeedTogether and Lettery TF end on a date and hand the
- *         pot back, which is not eternal at all, deliberately. The name came from the
- *         first idea; the hosts are where it was tested.
- *
- * @dev    THE GRID
- *
- *         Retention across, ending down. Each cell names the host that runs it, or says
- *         why it is empty.
- *
- *                        FLOOR                          FLOW
- *         COMPOUND       the original idea               Lettery Perpetual
- *         PORT           open                            specified, see COMPOSITIONS
- *         SPEND-DOWN     open, see below                 SeedTogether
- *         RETURN         open                            Lettery TF, BullsEthCRE
- *
- *         Floor with Spend-down has no known implementation: a protected minimum that is
- *         itself scheduled to be spent into a finale, so that even the untouchable part of
- *         the pot carries a maturity date. It is recorded because a taxonomy that predicts
- *         an unbuilt cell is doing its job. Whether it is a product or a curiosity is open.
- *
- * @dev    COMPOSITIONS
- *
- *         Retention rules combine. The first three below are novel to this suite and have
- *         no known deployed implementation elsewhere.
- *
- *         FLOOR PLUS FLOW. A floor with a flow above it. The pot does not fall below the
- *         floor, and also compounds each draw above it.
- *
- *         FLOW TO FLOOR. A flow that converts to a floor at a trigger, for example the
- *         midpoint of a season. Compounding first, protection after.
- *
- *         SEASONAL INHERITANCE. A flow in one season that becomes the protected floor of
- *         the next. The Port ending expressed as a composition. The grid files it under
- *         Flow because that is the rule running while the season does; it lands as a
- *         Floor in the season after.
- *
- *         DUAL FLOOR. Two floors for two classes of capital, a player floor and an investor
- *         floor. Meaningful only where more than one class of money is in the pot; with one
- *         class it collapses to an ordinary floor. See the suite's DormancyWaterfall2T
- *         library, and its specified three-tier sibling.
- *
- *         ADJACENT: YIELD-FUNDED SEED. Principal is not locked. The seed is funded only
- *         from diverted yield, so deposits stay withdrawable: under stress more yield
- *         routes to the seed, under stability the seed's yield routes to long-standing
- *         participants. It sits outside both retention rules because neither a floor on
- *         the pot nor a share of each prize is involved, only yield. It differs from a
- *         floor that earns yield: that is a floor which earns, this is a seed made of
- *         earnings. Specified, not built. The superseded reference repository published
- *         this mechanism as its "Variant 16"; it is named here by what it does so that it
- *         cannot be confused with anything numbered in that repository.
- *
- * @dev    SIZING SOLVERS
- *
- *         Every seed needs an answer to a separate question: what does this period pay?
- *         That question is the Autonomous Distribution Rate Problem, and it is answered in
- *         other files, not this one. There are four solvers, each for a different ending
- *         condition:
- *
- *           Hold a floor to a deadline          BreathEngine.sol, first host BullsEthCRE
- *           Sustain with no end                 Breath.sol, first host Lettery Perpetual
- *           Spend to zero in equal shares       SeedGlide, inline in SeedTogether
- *           Spend down on a rising arc          SeasonArc.sol, first host Lettery TF
- *
- *         Lettery TF sits in the grid's Return row: the arc spends its prize pot down, and
- *         what the seed held back is handed back per ticket at the close.
- *
- *         For a game that spends its pot down by a date, the choice between the two
- *         spend-down solvers is decided by where its prize money comes from. A pot funded
- *         by yield on parked deposits can open with a tiny first payment, because nobody
- *         paid an entry price that the payment has to justify, so equal shares work. A pot
- *         funded by ticket sales is different: the smallest prize is meant to be worth more
- *         than the ticket from the first draw, and equal shares from a small early pot do
- *         not manage that, so the payment grows from a solved opening instead. Parked yield
- *         permits a glide. Ticket money needs an arc.
- *
- * @dev    LINEAGE
- *
- *         The question was how to make the pot bigger. The first answer was to keep part
- *         of it back, a floor that was never paid out. Then a share of every prize coming
- *         home, so the pot grew draw on draw. Then putting the money held back to work,
- *         earning while it waited and drawn back when needed. Held back as a floor or
- *         returned as a share of each prize, how large the pot gets is set by income, yield
- *         and what each draw pays. Either way the pot can become large, and most of what
- *         followed answers the question that raised: what should a large pot actually do.
- *         The sizing solvers, the endings and the protections all come from there. The
- *         mechanism barely changed; what it was for did.
  *
  * @dev    PARAMETER CONSTRAINT (REQUIRED)
  *
@@ -465,7 +285,7 @@ library EternalSeed {
      *         without checking the inflow assumption.
      *
      *         Use for governance calibration and dashboard display only.
-     *         Do not use for solvency decisions; use BreathEngine.sim() instead.
+     *         Do not use for solvency decisions; use the sizing solver's own projection.
      *
      *         REQUIRES: payoutBps <= BPS_DENOM, seedBps <= BPS_DENOM.
      *
