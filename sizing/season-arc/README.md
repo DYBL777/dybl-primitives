@@ -64,15 +64,31 @@ or a ceiling on what a real host pays.
 
 **`size` is external, so a host links to one deployed copy** rather than carrying the solver in
 its own bytecode. Foundry deploys an unlinked library through the standard deterministic
-deployer, so the library's address follows from its exact bytecode. That bytecode carries a
-hash of the build's metadata, source path included, so the address belongs to the build that
-deployed it: a host that wants an existing copy links that copy's address rather than
-rebuilding it.
+deployer, so the library's address follows from its exact bytecode. That bytecode ends with a
+hash of the build's metadata, which records source paths and remappings, so the address belongs
+to the build that deployed it: a host that wants an existing copy links that copy's address
+rather than rebuilding it.
 
 **A host reaches it by DELEGATECALL**, which runs the library's code with the host's storage.
 SeasonArc is pure and touches no storage, but a host runs whatever code sits at the address it
-was linked to. A host's deploy should check that address before it matters; Lettery TF's deploy
-script does, and is the worked example.
+was linked to. A host's deploy should check the code at that address before it matters, against
+the instructions hash below. Lettery TF's deploy script is the worked example.
+
+**Checking a linked copy.** Compare the library's instructions, not its whole code. The last
+bytes of the runtime code are the compiler's metadata trailer, which differs from one tree to
+the next (paths, remappings, forge version), so two correct copies can have different code
+hashes and addresses. The instructions are the same. To compute: the last two bytes of the
+runtime code give the trailer's length; drop that many bytes plus two, then take the keccak256.
+SeasonArc has no call-protection placeholder, so the code on chain is the compiled code.
+
+| SeasonArc      | Runtime bytes | Instructions hash (trailer left off)                                 |
+|----------------|---------------|----------------------------------------------------------------------|
+| 1.1.5, 1.1.6   | 1,310         | `0xc4f7e21e0da4c59421372ffc0770135c73369dd7d2498c115b6a0281c0b6b2fb` |
+
+The value holds for the settings in `foundry.toml` (paris, via-IR, optimizer at 1 run) and the
+library built on its own. Other settings, the optimizer's above all, give other instructions,
+and a host's deploy should refuse them. A release that changes only comments or tests keeps the
+value; `test-deployable/` fails until a release that changes the code publishes a new one.
 
 **What the host is trusted to pass.** The library cannot see the host's books. It sizes from
 the numbers it is given, so a host that passes the pot before its income lands, or a return
@@ -95,13 +111,14 @@ Each host carries a copy of this folder and links the library unedited. Which co
 
 | Host                  | SeasonArc | `src/SeasonArc.sol` matches commit |
 |-----------------------|-----------|------------------------------------|
-| Lettery TF 1.4.5      | 1.1.5     | `6af3487`                          |
-| BullsTF 0.3.3         | 1.1.5     | `6af3487`                          |
-| SeedTogether 0.73     | 1.1.5     | `6af3487`                          |
+| Lettery TF 1.4.7      | 1.1.6     | `23c0357`                          |
+| BullsTF 0.3.8         | 1.1.6     | `23c0357`                          |
+| SeedTogether 0.78     | 1.1.6     | `23c0357`                          |
 
-1.1.6 changes one comment from 1.1.5 and no code. A build of it still has different bytes, since
-the compiler records the source in the build's metadata, so a host moving to 1.1.6 deploys and
-links a new copy. A host's documents outside `src/` may differ from this folder's at the same
+1.1.6 changes one comment from 1.1.5 and no code: the instructions are the same, but the metadata
+trailer records the source, so a build of 1.1.6 has a different code hash and address from a
+build of 1.1.5. A host moving to 1.1.6 deploys and links a new copy; its instructions pin does
+not change. A host's documents outside `src/` may differ from this folder's at the same
 version; the source is what the table compares.
 
 ## Files
@@ -121,7 +138,7 @@ version; the source is what the table compares.
     test/Ceiling.t.sol                very large figures, and where the arithmetic stops
     test/Gas.t.sol                    what a call and a season cost
     test/ArcRule.sol                  the rule coded apart from the library, used to judge answers
-    test-deployable/                  the build that deploys, tested on its own
+    test-deployable/                  the build that deploys, tested on its own, and its instructions hash
     sim/arc_fuzz.py                   the rule reimplemented in Python across random seasons
 
 From this folder, on a fresh clone:
@@ -132,7 +149,7 @@ From this folder, on a fresh clone:
     python3 sim/arc_fuzz.py
     halmos --contract SeasonArcProofs
 
-On forge 1.5.1 with solc 0.8.24: 70 tests across 11 suites, and 7 more in `test-deployable/`,
+On forge 1.5.1 with solc 0.8.24: 70 tests across 11 suites, and 9 more in `test-deployable/`,
 zero failures. On Halmos 0.3.3: five proofs, all passing.
 
 **The library's size depends on what is compiled with it.** With the settings in `foundry.toml`

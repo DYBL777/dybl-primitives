@@ -8,7 +8,8 @@ reaches it by DELEGATECALL, which executes the library's code against the host's
 SeasonArc is pure and writes nothing, but that is a property of this source, not of the address:
 a host linked to the wrong address runs that address's code with its own storage, and a linked
 address cannot be changed after deploy. Nothing in the library can guard against it. The check
-belongs in the host's deployment, and Lettery TF's deploy script makes it.
+belongs in the host's deployment, against the instructions hash in README.md; the deploy scripts
+of Lettery TF, BullsTF and SeedTogether make it.
 
 **The library's bytes depend on what else is in the compile.** With the settings in
 `foundry.toml`, solc 0.8.24 emits 1,310 runtime bytes for the library compiled on its own, and
@@ -18,7 +19,11 @@ does. The source and the settings are the same. The main tests import forge-std,
 (`FOUNDRY_PROFILE=deployable forge test`). A deployment should come from the library built on its
 own (`forge build --skip test`), so that a verifier compiling the library from its own source
 reproduces the deployed bytes. Every deployed copy of one build has the same code hash
-(`test/Link.t.sol`), so a host's deploy can check the linked address against the build it trusts.
+(`test/Link.t.sol`), but different trees give different code hashes for the same instructions:
+the metadata trailer at the end records source paths and remappings, and forge 1.8.1 can write
+the build machine's own folder paths into the remappings. A host's deploy should therefore pin
+the instructions hash (README.md, "Checking a linked copy"), which in our measurements was the
+same in this repository and in all three hosts' trees, on forge 1.5.1 and 1.8.1.
 
 **The library trusts the numbers it is given.** It cannot read the host's books, so a pot passed
 before its income lands, a return share the host does not actually return, or a last payment

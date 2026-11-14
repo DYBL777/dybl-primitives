@@ -20,6 +20,14 @@ contract DeployableBuild {
     /// figure is in README.md and moves with any change to the library or its settings.
     uint256 constant DEPLOYABLE_BYTES = 1_310;
 
+    /// The library's instructions: keccak256 of its runtime code with the compiler's metadata
+    /// trailer left off (`instructionHash`). The trailer records file paths and remappings, so
+    /// the whole-code hash differs from one tree to the next; the instructions do not. Hosts pin
+    /// this value. It is published per release in README.md and CHANGELOG.md, and moves with any
+    /// change to the library's code or to the settings in `foundry.toml`. A release that changes
+    /// only comments keeps it.
+    bytes32 constant INSTRUCTIONS = 0xc4f7e21e0da4c59421372ffc0770135c73369dd7d2498c115b6a0281c0b6b2fb;
+
     DeployableHost h;
 
     function setUp() public { h = new DeployableHost(); }
@@ -29,6 +37,44 @@ contract DeployableBuild {
     /// (KNOWN_ISSUES), and the rest of this file is no longer testing the build that deploys.
     function test_theLibraryUnderTestIsTheDeployableBuild() public view {
         require(address(SeasonArc).code.length == DEPLOYABLE_BYTES, "not the deployable build");
+    }
+
+    /// The deployable build carries the published instructions. If this fails, the library's
+    /// code or its settings changed: publish the new value with the release, and tell hosts,
+    /// whose deploy scripts pin it.
+    function test_theDeployableBuildCarriesThePublishedInstructions() public view {
+        require(instructionHash(address(SeasonArc).code) == INSTRUCTIONS, "instructions are not the published ones");
+    }
+
+    /// The hash ignores the metadata trailer and nothing else: a changed trailer byte keeps it,
+    /// and a changed instruction byte moves it.
+    function test_thePinIgnoresTheTrailerButNotOneInstruction() public view {
+        bytes memory code = address(SeasonArc).code;
+        uint256 n = code.length;
+        uint256 trailer = ((uint256(uint8(code[n - 2])) << 8) | uint256(uint8(code[n - 1]))) + 2;
+        require(trailer == 53, "the trailer is the expected 53 bytes");
+        bytes memory otherTrailer = bytes.concat(code);
+        otherTrailer[n - 10] = bytes1(uint8(otherTrailer[n - 10]) ^ 0xff);
+        require(keccak256(otherTrailer) != keccak256(code), "the copy differs");
+        bytes32 own = instructionHash(code);
+        require(instructionHash(otherTrailer) == own, "a trailer change keeps the hash");
+        bytes memory otherCode = bytes.concat(code);
+        otherCode[100] = bytes1(uint8(otherCode[100]) ^ 0x01);
+        require(instructionHash(otherCode) != own, "an instruction change moves the hash");
+    }
+
+    /// keccak256 of `code` without its metadata trailer. Solidity ends runtime code with a CBOR
+    /// block and, in the last two bytes, that block's length; drop that many bytes plus two.
+    /// Code too short to carry the length, or whose length field does not fit, hashes whole.
+    /// SeasonArc has no call-protection placeholder, so the code on chain is the compiled code.
+    function instructionHash(bytes memory code) internal pure returns (bytes32 h) {
+        uint256 n = code.length;
+        uint256 len = n;
+        if (n >= 2) {
+            uint256 tail = ((uint256(uint8(code[n - 2])) << 8) | uint256(uint8(code[n - 1]))) + 2;
+            if (tail <= n) len = n - tail;
+        }
+        assembly ("memory-safe") { h := keccak256(add(code, 32), len) }
     }
 
     function grid(uint256 left, uint256 potU, uint256 lastU, uint256 incU, uint256 jitter) internal view {

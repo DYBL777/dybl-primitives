@@ -3,6 +3,13 @@
 Current version: 1.1.6. Code changes are listed first, newest first; versions that changed only
 comments or documentation (1.1.1 to 1.1.6) are summarised after them.
 
+Instructions hash (runtime code with the metadata trailer left off; how to compute it is in
+README.md, "Checking a linked copy"), for the settings in `foundry.toml`:
+
+| Version        | Instructions hash                                                    |
+|----------------|----------------------------------------------------------------------|
+| 1.1.5, 1.1.6   | `0xc4f7e21e0da4c59421372ffc0770135c73369dd7d2498c115b6a0281c0b6b2fb` |
+
 Versions follow MAJOR.MINOR.PATCH. The solver's history before it had its own
 repository, every change to its logic included, is in Lettery TF's CHANGELOG up to version 0.998.
 
@@ -28,6 +35,14 @@ repository, every change to its logic included, is in Lettery TF's CHANGELOG up 
   without a host, with a fuzzed season that requires no draw to pay more than the pot holds.
 
 ---
+
+**Instructions hash published after 1.1.6** (library unchanged). PROBLEM: hosts checked the
+  linked copy by its whole code hash, which includes the metadata trailer; the trailer records
+  paths and remappings, so a correct copy built in another tree, or on another forge version,
+  failed the check. SOLUTION: the instructions hash (trailer left off) is published per release
+  here and in README.md, with how to compute it; `test-deployable/DeployableBuild.t.sol` pins it,
+  and tests that a trailer change keeps the hash and an instruction change moves it. A changed
+  constant in the library fails the pin while the 1,310-byte size check still passes.
 
 **Tests added after 1.1.6** (library unchanged). PROBLEM: the library accepts an opening of 0% to
   100%, but the suites fuzzed it only from 10% to 50%, and no test measured what a shrinking crowd
