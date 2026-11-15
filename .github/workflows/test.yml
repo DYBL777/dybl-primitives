@@ -1,0 +1,57 @@
+# Runs every library's test suite on each push and pull request, with the same tools the
+# READMEs give: forge 1.5.1, solc 0.8.24 (set in each foundry.toml) and forge-std v1.16.2.
+# Halmos proofs and mutation runs are not part of this: the Halmos commands are in SeasonArc's
+# README and at the top of EternalSeed's test/Proofs.t.sol, and each library's KNOWN_ISSUES
+# (DESIGN.md for SeasonArc) gives its mutation results.
+name: tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  forge:
+    name: ${{ matrix.lib }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        lib: [seed/eternal-seed, sizing/breath, sizing/season-arc]
+    defaults:
+      run:
+        working-directory: ${{ matrix.lib }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: v1.5.1
+
+      - name: forge-std v1.16.2
+        run: git clone --depth 1 --branch v1.16.2 https://github.com/foundry-rs/forge-std lib/forge-std
+
+      - name: Tests
+        run: forge test
+
+      - name: Tests on the build that deploys
+        if: matrix.lib == 'sizing/season-arc'
+        run: forge test
+        env:
+          FOUNDRY_PROFILE: deployable
+
+  lab:
+    name: Season Lab port against its cases
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Port against lab/vectors.json
+        run: node sizing/season-arc/lab/seasonarc.js check

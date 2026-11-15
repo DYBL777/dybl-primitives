@@ -129,7 +129,7 @@ code{font-family:var(--mono);font-size:.92em}
 <div class="grid">
   <aside class="panel controls" aria-label="Season settings">
     <div class="sect">Crowd</div>
-    <div class="ctl"><label for="crowd"><span id="crowdLabel">Players a draw</span> <output id="o-crowd"></output></label>
+    <div class="ctl"><label for="crowd"><span id="crowdLabel">Players per draw</span> <output id="o-crowd"></output></label>
       <input type="range" id="crowd" min="0" max="1000" step="1" value="500">
       <div class="chips" id="crowdChips"></div></div>
     <div class="ctl"><label for="shape">Over the season</label>
@@ -194,7 +194,7 @@ code{font-family:var(--mono);font-size:.92em}
 
     <section class="panel">
       <h2>Every draw</h2>
-      <p class="note">What the game hands SeasonArc, and what it answers. "Last draw passed" is the last payment as the game passes it back, after its rule above.<span id="stDates"> SeedTogether's dates are its first-Saturday calendar from a 15 January 2027 launch, as in its ECONOMICS.md.</span></p>
+      <p class="note">What the game hands SeasonArc, and what it answers. "Last draw passed" is the last payment as the game passes it back, after its rule above.<span id="stDates"> SeedTogether's dates are an example season on its first-Saturday calendar, starting from the same date its ECONOMICS.md uses (15 January 2027). They are not a planned date.</span></p>
       <div class="tablewrap"><table id="table"></table></div>
     </section>
 
@@ -205,7 +205,7 @@ code{font-family:var(--mono);font-size:.92em}
         <label for="q-pot">Pot ($)<input id="q-pot" inputmode="decimal" value="100000"></label>
         <label for="q-last">Last draw ($), 0 opens<input id="q-last" inputmode="decimal" value="3000"></label>
         <label for="q-left">Draws left, this one included<input id="q-left" inputmode="numeric" value="40"></label>
-        <label for="q-inc">Income a draw ($)<input id="q-inc" inputmode="decimal" value="2000"></label>
+        <label for="q-inc">Income per draw ($)<input id="q-inc" inputmode="decimal" value="2000"></label>
         <label for="q-ret">Comes back (%)<input id="q-ret" inputmode="decimal" value="29.9"></label>
         <label for="q-open">Opening share (%)<input id="q-open" inputmode="decimal" value="25"></label>
       </div>
@@ -258,8 +258,9 @@ const HOSTS = {
 };
 
 // SeedTogether's calendar: a draw on the first Saturday of each month at 17:00 UK time, the
-// first at least 28 days after launch (Howard Hinnant's civil-date algorithms, as the contract
-// and sim/seedtogether.py use them). Launch as in SeedTogether's ECONOMICS.md: 15 Jan 2027.
+// first at least 28 days after the game is deployed (Howard Hinnant's civil-date algorithms, as
+// the contract and sim/seedtogether.py use them). The example start date is the one
+// SeedTogether's ECONOMICS.md uses, 15 Jan 2027; it is not a planned date.
 const DAY = 86400, ST_DEPLOY = 1800000000;
 function daysFromCivil(y, m, d) {
   if (m <= 2) y -= 1;
@@ -425,7 +426,7 @@ function setHost(h) {
   $("ticket").value = H.ticket || 5; $("deposit").value = H.deposit || 1000; $("apr").value = H.apr;
   $("ticketCtl").hidden = H.income !== "tickets"; $("depositCtl").hidden = H.income !== "yield";
   $("aprCtl").hidden = h === "bulls";
-  $("crowdLabel").textContent = H.income === "yield" ? "Wallets in" : "Players a draw";
+  $("crowdLabel").textContent = H.income === "yield" ? "Wallets in" : "Players per draw";
   $("openingNote").textContent = H.openNote; $("drawsNote").textContent = H.drawsNote; $("retNote").textContent = H.retNote;
   $("ticketNote").textContent = h === "tf" ? "TF ships $5; 20% goes to the treasury." : "BullsTF ships $10; 20% goes to the treasury.";
   $("aprNote").textContent = h === "tf" ? "On the pot and the jackpot stockpile, added weekly." : "On deposits, the pot and the reserve; 10% of it to the treasury.";
@@ -499,14 +500,14 @@ function render() {
   const startCrowd = cfg.crowd[0];
   $("context").textContent = yieldGame
     ? `${nf(startCrowd)} wallets at ${money(dep)} average · ${money(startCrowd * dep)} deposited at the start · ${money(usd(main.moneyIn))} of yield over the season · treasury ${money(usd(main.treasury))}`
-    : `${nf(startCrowd)} players a draw at the start · ${money(startCrowd * usd(cfg.ticket))} of tickets a draw · ${money(usd(main.moneyIn))} a season · treasury ${money(usd(main.treasury))}`;
+    : `${nf(startCrowd)} players per draw at the start · ${money(startCrowd * usd(cfg.ticket))} of tickets per draw · ${money(usd(main.moneyIn))} over the season · treasury ${money(usd(main.treasury))}`;
   const pp = R.map(perPlayer), falls = pp.filter((x, i) => i > 0 && x < pp[i - 1] - 1e-9).length;
   const fallsDraws = pp.map((x, i) => i > 0 && x < pp[i - 1] - 1e-9 ? R[i].d : 0).filter(Boolean);
   const binds = [0, 0, 0, 0, 0]; R.forEach(r => binds[r.bind]++);
   const tiles = [
-    ["Draw 1, to players", money(usd(first.paid)), `${money(pp[0])} a player · sized ${money(usd(first.sized))}`, ""],
-    ["Closing draw, to players", money(usd(end.paid)), `${money(pp[pp.length - 1])} a player · sized ${money(usd(end.sized))}`, ""],
-    ["Climb a player", pp[0] > 0 ? (pp[pp.length - 1] / pp[0]).toFixed(1) + "x" : "n/a", "closing draw over draw 1", ""],
+    ["Draw 1, to players", money(usd(first.paid)), `${money(pp[0])} per player · sized ${money(usd(first.sized))}`, ""],
+    ["Closing draw, to players", money(usd(end.paid)), `${money(pp[pp.length - 1])} per player · sized ${money(usd(end.sized))}`, ""],
+    ["Climb per player", pp[0] > 0 ? (pp[pp.length - 1] / pp[0]).toFixed(1) + "x" : "n/a", "closing draw over draw 1", ""],
     ["Draws where a player's share fell", String(falls), falls ? "draw " + fallsDraws.slice(0, 4).join(", ") + (fallsDraws.length > 4 ? "…" : "") : "it rose or held every draw", falls ? "warn" : "good"],
     ["To players over the season", money(usd(main.paidOut)), yieldGame ? "all the yield after the treasury's 10%"
       : main.stockpile > 0n ? `all that entered the pot; ${money(usd(main.stockpile))} of it is the jackpot stockpile, handed back at the end` : "all that entered the pot", ""],
@@ -609,7 +610,7 @@ $("chart").addEventListener("mousemove", ev => {
     tip.textContent = `${Math.round(best.x * 100)}% through · ` + parts.join(" · ");
   } else {
     const r = best.r;
-    tip.textContent = `Draw ${r.d} · ${view === "perPlayer" ? money(perPlayer(r)) + " a player" : view === "pot" ? money(usd(r.potBefore)) + " pot" : view === "sized" ? money(usd(r.sized)) + " sized" : money(usd(r.paid)) + " to players"} · ${BINDS[r.bind][0].toLowerCase()}`;
+    tip.textContent = `Draw ${r.d} · ${view === "perPlayer" ? money(perPlayer(r)) + " per player" : view === "pot" ? money(usd(r.potBefore)) + " pot" : view === "sized" ? money(usd(r.sized)) + " sized" : money(usd(r.paid)) + " to players"} · ${BINDS[r.bind][0].toLowerCase()}`;
   }
   const px = g.X(best.x) / g.W * rect.width; tip.style.left = Math.min(rect.width - tip.offsetWidth - 4, Math.max(0, px + 8)) + "px"; tip.style.top = "6px";
 });
