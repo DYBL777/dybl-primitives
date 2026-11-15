@@ -6,10 +6,10 @@ The reference for the seed rule behind every game in this suite: how much of a g
 kept back, or comes back, each draw, so the next draw does not start from zero. The seed is the
 pot itself under that rule, not a reserve held beside it.
 
-**Pre-testnet. Not deployed, not audited.** The design and the mechanisms are the author's. AI was
-the researcher, the economic modeller and the co-developer: writing the Solidity, each step
-tested and reviewed before the next began. What is unproven or carried as a
-known limit is in [KNOWN_ISSUES.md](KNOWN_ISSUES.md).
+**Pre-testnet. Not deployed, not audited.** The design is the author's. AI was the researcher, the
+economic modeller and the co-developer: writing the Solidity, each step tested and reviewed before
+the next began. What is unproven or carried as a known limit is in
+[KNOWN_ISSUES.md](KNOWN_ISSUES.md).
 
 ## What it answers
 

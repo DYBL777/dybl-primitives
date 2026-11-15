@@ -40,6 +40,13 @@ each grew out of a game. Two are in this repository, Breath and SeasonArc; the f
 a deadline, stays inside BullsEthCRE for now. They are tested only in their own test suites, and
 none has run on a test network yet.
 
+I came at the seed and the breath from the game side. Only later did I find that finance has its
+own versions. Endowments like Yale's smooth their spending so a fund can last forever, and
+retirement rules like variable percentage withdrawal spend savings down to a planned end, working
+the share out again every year. Finding them was a good sign, because those shapes have been
+tested for decades. What I haven't found is those shapes run on-chain, every draw, from a live
+pot, for games. Each library's notes say where it sits next to them.
+
 I started in November 2025, and I'm about twenty contracts in. The seed and the breath grew with
 every game, in tandem with everything else they need before anyone should trust them with money:
 what happens when a lender freezes, when the randomness doesn't arrive, when a draw has to be

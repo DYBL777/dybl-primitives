@@ -120,8 +120,7 @@ an unbuilt cell is doing its job. Whether it is a product or a curiosity is open
 
 ## Compositions
 
-Retention rules combine. The first three below are novel to this suite and have
-no known deployed implementation elsewhere.
+Retention rules combine. Four combinations:
 
 FLOOR PLUS FLOW. A floor with a flow above it. The pot does not fall below the
 floor, and also compounds each draw above it.

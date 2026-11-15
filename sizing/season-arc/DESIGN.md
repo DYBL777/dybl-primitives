@@ -181,8 +181,39 @@ idea in finance. SeasonArc is a growing annuity that re-solves its own growth ra
 from the live pot and the income just observed, with no one setting it. It is also close to an
 amortisation schedule that re-derives itself each period.
 
-Its sibling, Breath, answers the same question for a pool with no end date (its closest older
-relative is the endowment spending rule, such as Yale's).
+The closest relative we know of is variable percentage withdrawal (VPW), a rule for spending
+retirement savings to a planned end. Each year it spends a share of what is left, worked out
+again over the years remaining, and the share rises as they run out. SeasonArc takes the same
+step every draw. It differs in what it grows from: VPW pays a share of the balance, so its
+payments move with the market; SeasonArc grows from its own last payment, so payments climb
+while the pot allows and step down only when it cannot carry them. It also counts the income
+still to arrive and the share of each payment that comes back to the pot, and when a rising path
+no longer fits it pays the largest level amount the season can carry.
+
+Nearer to hand, on chain and in lotteries, each of these shares one part of it:
+
+- **PoolTogether V5** spreads each draw's contributions over future draws by exponential
+  smoothing, adapting prize sizes with no admin. It has no end date, and it smooths from money
+  already in rather than solving toward a last draw.
+- **Synthetix StakingRewards** re-spreads what is left, plus new rewards, over a fresh window
+  when rewards arrive: the same re-solving step, but at a flat rate, and the window restarts
+  rather than counting down to a fixed end.
+- **Sablier's dynamic streams** can pay on a curve that steepens toward an end date, but the
+  curve and the total are fixed when the stream is created and do not take in new money.
+- **"Must be won" lottery draws**, such as the UK Lotto's after five rollovers, already pay out
+  the whole jackpot on a set draw, rolling it down to lower tiers if nobody matches six.
+  SeasonArc's closing draw is the same rule for its pot.
+
+What SeasonArc puts together, in one library shared by several games: a payment solved in whole
+numbers each draw as growth on the last one; a pot with a fixed end, which the closing draw pays
+out; income arriving mid-season and a returned share folded in as it happens; and a level
+fallback, a step down, when the rise no longer fits. We have not found these combined elsewhere.
+That reflects our search of public code, documentation and finance writing; it is not a patent
+search, and it does not show that nobody has.
+
+Its sibling, Breath, answers the same question for a pool with no end date. Its closest
+relatives are endowment spending rules such as Yale's and, on chain, PoolTogether V5's prize
+pool (Breath's README).
 
 ## Evidence
 

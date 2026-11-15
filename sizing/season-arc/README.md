@@ -4,10 +4,11 @@ A Solidity library that decides what each draw of a fixed-length season should p
 the game holds now and the number of draws left. Payments rise across the season, and the pot
 is spent down by the last draw.
 
-**Pre-testnet. Not deployed, not audited.** The design and the mechanisms are the author's. AI was
-the researcher, the economic modeller and the co-developer: writing the Solidity, each step
-tested and reviewed before the next began. What is unproven or carried as a
-known limit is in [KNOWN_ISSUES.md](KNOWN_ISSUES.md).
+**Pre-testnet. Not deployed, not audited.** The design is the author's, arrived at independently;
+how it sits beside related work is in [DESIGN.md](DESIGN.md#related-work). AI was the researcher,
+the economic modeller and the co-developer: writing the Solidity, each step tested and reviewed
+before the next began. What is unproven or carried as a known limit is in
+[KNOWN_ISSUES.md](KNOWN_ISSUES.md).
 
 ## What it answers
 

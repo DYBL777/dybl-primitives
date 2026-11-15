@@ -3,10 +3,10 @@
 A Solidity library that decides what each draw of a game with no end date can afford to pay,
 from the game's live state: its income, its yield and what it paid last time.
 
-**Pre-testnet. Not deployed, not audited.** The design and the mechanisms are the author's. AI was
-the researcher, the economic modeller and the co-developer: writing the Solidity, each step
-tested and reviewed before the next began. What is unproven or carried as a
-known limit is in [KNOWN_ISSUES.md](KNOWN_ISSUES.md).
+**Pre-testnet. Not deployed, not audited.** The design is the author's, arrived at independently;
+how it sits beside related work is under Prior art, below. AI was the researcher, the economic
+modeller and the co-developer: writing the Solidity, each step tested and reviewed before the next
+began. What is unproven or carried as a known limit is in [KNOWN_ISSUES.md](KNOWN_ISSUES.md).
 
 ## What it answers
 
@@ -66,6 +66,12 @@ sustain. Breath does that on-chain, from live state, every draw. It differs in t
 anchors on this draw's income and yield rather than a fixed share of the fund's value; its fast
 average can be set to react faster to a fall than to a rise (the library refuses the reverse);
 and there is no committee to step in, so the rule itself carries that job.
+
+The nearest on-chain relative we know of is PoolTogether V5's prize pool. It also runs with no
+end date and no admin, and it spreads each draw's contributions over future draws by exponential
+smoothing. Breath works from the other side: it sizes each payout from the live pot, this draw's
+income and yield, and what it paid last, within limits on how far a payout can move in one draw,
+where PoolTogether smooths the money coming in across its prize tiers.
 
 ## Hosts
 
