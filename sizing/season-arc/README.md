@@ -121,6 +121,26 @@ build of 1.1.5. A host moving to 1.1.6 deploys and links a new copy; its instruc
 not change. A host's documents outside `src/` may differ from this folder's at the same
 version; the source is what the table compares.
 
+## Season Lab
+
+[SeasonArc Lab](https://claude.ai/artifact/T8ZudBcJVCNyQrKA7FfLjW) (`lab/index.html`) runs whole
+seasons through the library for each host as shipped: pick a host, shape the crowd (flat,
+growing, shrinking, a crash or a surge mid-season), and see each draw's size, the rule that sized
+it, and what it comes to per player. It also draws the same season with the last payment passed
+back under the other hosts' rules, puts the three hosts on one scale, and answers single calls.
+
+Its draws are sized by `lab/seasonarc.js`, a line-for-line port of the library in whole numbers,
+with the library's rounding and reverts. `lab/vectors.json` holds 1,566 calls with the library's
+answers: `test/Vectors.t.sol` checks the compiled library against every one, and
+`node lab/seasonarc.js check` checks the port, so the two are held to one file. A host page that
+needs the library's rule can load the port, or check its own copy against the file, instead of
+porting it again.
+
+Each host is cut down to the money the library sees, and checked against the host's own model:
+BullsTF and SeedTogether to the unit on every draw but the closing one across five crowd shapes,
+and Lettery TF the same on steady crowds. The page lists what each host is reduced to and what it
+leaves out; each host's own Season Lab has its full money.
+
 ## Files
 
     src/SeasonArc.sol                 the library
@@ -138,8 +158,12 @@ version; the source is what the table compares.
     test/Ceiling.t.sol                very large figures, and where the arithmetic stops
     test/Gas.t.sol                    what a call and a season cost
     test/ArcRule.sol                  the rule coded apart from the library, used to judge answers
+    test/Vectors.t.sol                the library against every case in lab/vectors.json
     test-deployable/                  the build that deploys, tested on its own, and its instructions hash
     sim/arc_fuzz.py                   the rule reimplemented in Python across random seasons
+    lab/index.html                    the Season Lab
+    lab/seasonarc.js                  the library ported to JavaScript, as the lab runs it
+    lab/vectors.json                  1,566 calls and the library's answers
 
 From this folder, on a fresh clone:
 
@@ -147,9 +171,10 @@ From this folder, on a fresh clone:
     forge test
     FOUNDRY_PROFILE=deployable forge test
     python3 sim/arc_fuzz.py
+    node lab/seasonarc.js check
     halmos --contract SeasonArcProofs
 
-On forge 1.5.1 with solc 0.8.24: 70 tests across 11 suites, and 9 more in `test-deployable/`,
+On forge 1.5.1 with solc 0.8.24: 71 tests across 12 suites, and 9 more in `test-deployable/`,
 zero failures. On Halmos 0.3.3: five proofs, all passing.
 
 **The library's size depends on what is compiled with it.** With the settings in `foundry.toml`

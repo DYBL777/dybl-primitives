@@ -36,6 +36,17 @@ repository, every change to its logic included, is in Lettery TF's CHANGELOG up 
 
 ---
 
+**Season Lab after 1.1.6** (library unchanged). PROBLEM: each host carried its own JavaScript
+  or Python copy of the library's rule for its pages and models, each checked against its own
+  game but none against the compiled library. SOLUTION: `lab/seasonarc.js` ports the library in
+  whole numbers with its rounding and reverts; `lab/vectors.json` holds 1,566 calls with the
+  library's answers, checked against the compiled library by `test/Vectors.t.sol` and against the
+  port by `node lab/seasonarc.js check`. `lab/index.html` runs seasons for each host on the port.
+  Mutation-checked: two answer-changing edits to the library, one to the port and a one-unit
+  edit to the file each failed. Three edits that change no answer passed: the bisection's step
+  limit, a return after the last step, and the held-level search starting one unit higher, still
+  below the band DESIGN.md bounds.
+
 **Instructions hash published after 1.1.6** (library unchanged). PROBLEM: hosts checked the
   linked copy by its whole code hash, which includes the metadata trailer; the trailer records
   paths and remappings, so a correct copy built in another tree, or on another forge version,

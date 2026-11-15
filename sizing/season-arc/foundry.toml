@@ -14,6 +14,8 @@ remappings = ["forge-std/=lib/forge-std/src/"]
 # Test runs only: test/Exhaustive.t.sol walks 40,000 calls in one test, far past the default
 # block gas limit. This does not touch the library's compiled bytes.
 gas_limit = "9223372036854775807"
+# test/Vectors.t.sol reads the Season Lab's cases. Read only, and only that folder.
+fs_permissions = [{ access = "read", path = "./lab" }]
 
 [fuzz]
 runs = 256

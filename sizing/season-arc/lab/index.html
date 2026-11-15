@@ -1,0 +1,669 @@
+<!doctype html>
+<!-- SPDX-License-Identifier: MIT -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SeasonArc Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: the dials on the left, the season they produce on the right (the same frame as the
+   games' own Season Labs, so the family reads as one); one column on phones. The arc is drawn
+   like a plotter trace on drafting paper; each draw's dot is coloured by the rule that sized it. */
+:root{
+  --paper:#f2f4f3; --sheet:#ffffff; --ink:#18212b; --graphite:#56606c; --rule:#d5dbdf; --grid:#e6eaec;
+  --trace:#1d5f7a; --trace-soft:rgba(29,95,122,.12);
+  --b-open:#b06d0b; --b-arc:#1d5f7a; --b-held:#6d4f9e; --b-pot:#7b8590; --b-close:#b23a48;
+  --good:#2f7a4f; --warn:#a84a1f;
+  --display:"IBM Plex Sans Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",Roboto,Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#11161b; --sheet:#182027; --ink:#e3e8ec; --graphite:#9aa6b2; --rule:#2b3640; --grid:#222c35;
+  --trace:#6fb3d2; --trace-soft:rgba(111,179,210,.16);
+  --b-open:#e3a443; --b-arc:#6fb3d2; --b-held:#a98be0; --b-pot:#8d98a4; --b-close:#e8798a;
+  --good:#6cc28f; --warn:#e8946c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#11161b; --sheet:#182027; --ink:#e3e8ec; --graphite:#9aa6b2; --rule:#2b3640; --grid:#222c35;
+  --trace:#6fb3d2; --trace-soft:rgba(111,179,210,.16);
+  --b-open:#e3a443; --b-arc:#6fb3d2; --b-held:#a98be0; --b-pot:#8d98a4; --b-close:#e8798a;
+  --good:#6cc28f; --warn:#e8946c; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 var(--body)}
+.wrap{max-width:1240px;margin:0 auto;padding-block:28px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:flex;flex-wrap:wrap;gap:8px 28px;align-items:end;justify-content:space-between}
+header h1{font:700 clamp(30px,4.4vw,44px)/1.05 var(--display);letter-spacing:-.01em;margin:0;text-wrap:balance}
+header h1 span{color:var(--trace)}
+header p{margin:8px 0 0;color:var(--graphite);max-width:68ch}
+.libtag{font:12.5px/1.5 var(--mono);color:var(--graphite);text-align:right;font-variant-numeric:tabular-nums}
+.libtag b{color:var(--ink);font-weight:500}
+.hosts{display:flex;flex-wrap:wrap;gap:8px;margin-top:22px}
+.host{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:9px 14px;border:1px solid var(--rule);border-radius:8px;background:var(--sheet);color:var(--ink);cursor:pointer;font:inherit;text-align:left;min-width:150px}
+.host b{font:600 15px var(--display);letter-spacing:.01em}
+.host small{font:12px var(--mono);color:var(--graphite)}
+.host:hover{border-color:var(--trace)}
+.host[aria-pressed="true"]{border-color:var(--trace);box-shadow:inset 0 0 0 1px var(--trace);background:var(--trace-soft)}
+.grid{display:grid;grid-template-columns:320px minmax(0,1fr);gap:22px;margin-top:18px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:18px;min-width:0}
+.controls{display:flex;flex-direction:column;gap:14px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);max-height:calc(100vh - 24px);overflow-y:auto}
+@media (max-width:900px){.controls{position:static;max-height:none}}
+.sect{font:600 11.5px var(--body);letter-spacing:.09em;text-transform:uppercase;color:var(--graphite);margin:6px 0 -6px}
+.ctl{display:flex;flex-direction:column;gap:5px}
+.ctl label{display:flex;justify-content:space-between;gap:8px;font-weight:500;font-size:14px}
+.ctl output{font-family:var(--mono);font-variant-numeric:tabular-nums;color:var(--trace);white-space:nowrap}
+.ctl small{color:var(--graphite);font-size:12.5px;line-height:1.4}
+input[type=range]{width:100%;accent-color:var(--trace)}
+select{font:inherit;font-size:14px;padding:6px 8px;border-radius:6px;border:1px solid var(--rule);background:var(--sheet);color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12.5px var(--body);padding:4px 10px;border-radius:999px;border:1px solid var(--rule);background:transparent;color:var(--ink);cursor:pointer}
+.chip:hover{border-color:var(--trace)}
+.chip[aria-pressed="true"]{background:var(--trace);border-color:var(--trace);color:var(--sheet)}
+.chip:focus-visible,.host:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--trace);outline-offset:2px}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:14px}
+.check input{margin-top:3px;accent-color:var(--trace)}
+.results{display:flex;flex-direction:column;gap:18px;min-width:0}
+.context{font:13px var(--mono);color:var(--graphite);font-variant-numeric:tabular-nums}
+.changed{font-size:13px;color:var(--warn)}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media (max-width:600px){.tiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.tile{background:var(--sheet);border:1px solid var(--rule);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tile .k{font-size:12.5px;color:var(--graphite)}
+.tile .v{font:600 24px/1.15 var(--display);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.tile .s{font:12px var(--mono);color:var(--graphite)}
+.v.good{color:var(--good)} .v.warn{color:var(--warn)}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chartbox{position:relative;margin-top:12px}
+svg.chart{width:100%;height:auto;display:block}
+.chart text{font:11px var(--mono);fill:var(--graphite)}
+.tip{position:absolute;pointer-events:none;background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:6px 8px;font:12px var(--mono);white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.14);color:var(--ink);z-index:2}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--graphite);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:-1px;margin-right:6px}
+.legend i.line{width:16px;height:3px;border-radius:2px}
+.legend i.dash{width:16px;height:0;border-top:2px dashed currentColor;border-radius:0}
+h2{font:600 19px var(--display);margin:0 0 6px;letter-spacing:.01em}
+.note{color:var(--graphite);font-size:13.5px;max-width:78ch}
+.note p{margin:0 0 8px}
+.tablewrap{overflow:auto;max-height:420px;border-top:1px solid var(--rule)}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:13px}
+th,td{padding:6px 8px;text-align:right;border-bottom:1px solid var(--grid);white-space:nowrap}
+th{font-weight:600;color:var(--graphite);font-size:11px;text-transform:uppercase;letter-spacing:.05em;position:sticky;top:0;background:var(--sheet)}
+th:first-child,td:first-child{text-align:left}
+.bind{display:inline-flex;align-items:center;gap:6px}
+.bind i{width:8px;height:8px;border-radius:50%;display:inline-block}
+.ask{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 14px}
+@media (max-width:600px){.ask{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.ask label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--graphite)}
+.ask input{font:14px var(--mono);padding:6px 8px;border-radius:6px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);width:100%;min-width:0}
+.answer{margin-top:12px;font:15px var(--mono);font-variant-numeric:tabular-nums}
+.answer b{font:600 22px var(--display)}
+.proof{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.btn{font:600 13.5px var(--body);padding:8px 14px;border-radius:7px;border:1px solid var(--trace);background:var(--trace);color:var(--sheet);cursor:pointer}
+.btn:disabled{opacity:.6;cursor:default}
+.hash{font:12px var(--mono);color:var(--graphite);overflow-wrap:anywhere}
+.busy{opacity:.55;transition:opacity .15s}
+@media (prefers-reduced-motion:reduce){.busy{transition:none}}
+code{font-family:var(--mono);font-size:.92em}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div>
+    <h1>Season<span>Arc</span> Lab</h1>
+    <p>One library sizes every draw in three games. Pick a game, shape the crowd, and watch SeasonArc answer draw by draw: how big each draw is, which rule sized it, and what that means per player. Every draw on this page is sized by a line-for-line copy of the library, checked against the compiled contract.</p>
+  </div>
+  <div class="libtag">SeasonArc <b>1.1.6</b> · <b>1,310</b> bytes<br>instructions <b>0xc4f7e21e…6b2fb</b></div>
+</header>
+
+<div class="hosts" id="hosts" role="group" aria-label="Game">
+  <button class="host" type="button" data-host="tf"><b>Lettery TF</b><small>52 weekly draws · opens at 25%</small></button>
+  <button class="host" type="button" data-host="bulls"><b>BullsTF</b><small>30 draws, every 72 hours · 35%</small></button>
+  <button class="host" type="button" data-host="st"><b>SeedTogether</b><small>36 monthly draws · 28%</small></button>
+</div>
+
+<div class="grid">
+  <aside class="panel controls" aria-label="Season settings">
+    <div class="sect">Crowd</div>
+    <div class="ctl"><label for="crowd"><span id="crowdLabel">Players a draw</span> <output id="o-crowd"></output></label>
+      <input type="range" id="crowd" min="0" max="1000" step="1" value="500">
+      <div class="chips" id="crowdChips"></div></div>
+    <div class="ctl"><label for="shape">Over the season</label>
+      <div class="chips" id="shapes" role="group" aria-label="Crowd shape">
+        <button class="chip" type="button" data-shape="flat">Flat</button>
+        <button class="chip" type="button" data-shape="grow">Growing</button>
+        <button class="chip" type="button" data-shape="shrink">Shrinking</button>
+        <button class="chip" type="button" data-shape="crash">Crash</button>
+        <button class="chip" type="button" data-shape="surge">Surge</button>
+      </div></div>
+    <div class="ctl" id="strengthCtl"><label for="strength"><span id="strengthLabel">Change per draw</span> <output id="o-strength"></output></label>
+      <input type="range" id="strength" min="0" max="100" step="1" value="2">
+      <small id="strengthNote"></small></div>
+
+    <div class="sect">What the game tells SeasonArc</div>
+    <div class="ctl"><label for="opening">Opening share <output id="o-opening"></output></label>
+      <input type="range" id="opening" min="0" max="100" step="1" value="25">
+      <small id="openingNote"></small></div>
+    <div class="ctl"><label for="draws">Season length <output id="o-draws"></output></label>
+      <input type="range" id="draws" min="2" max="160" step="1" value="52">
+      <small id="drawsNote"></small></div>
+    <div class="ctl"><label for="ret">Comes back to the pot <output id="o-ret"></output></label>
+      <input type="range" id="ret" min="0" max="60" step="0.1" value="29.9">
+      <small id="retNote"></small></div>
+    <div class="ctl"><label for="anchor">The last draw, as passed back</label>
+      <select id="anchor">
+        <option value="scaled">Scaled to the crowd (TF, BullsTF)</option>
+        <option value="falls">Scaled down only when deposits fall (SeedTogether)</option>
+        <option value="raw">As it was, unscaled</option>
+      </select>
+      <label class="check" for="compare"><input type="checkbox" id="compare" checked> Draw the other two rules faintly</label></div>
+
+    <div class="sect">Money in</div>
+    <div class="ctl" id="ticketCtl"><label for="ticket">Ticket price <output id="o-ticket"></output></label>
+      <input type="range" id="ticket" min="1" max="50" step="1" value="5">
+      <small id="ticketNote"></small></div>
+    <div class="ctl" id="depositCtl"><label for="deposit">Average deposit <output id="o-deposit"></output></label>
+      <input type="range" id="deposit" min="100" max="10000" step="100" value="1000"></div>
+    <div class="ctl" id="aprCtl"><label for="apr">Aave rate a year <output id="o-apr"></output></label>
+      <input type="range" id="apr" min="0" max="12" step="0.25" value="4">
+      <small id="aprNote"></small></div>
+    <button class="chip" type="button" id="reset" style="align-self:flex-start">Back to the game as shipped</button>
+  </aside>
+
+  <main class="results" id="results">
+    <div class="context" id="context"></div>
+    <div class="changed" id="changed" hidden></div>
+    <div class="tiles" id="tiles"></div>
+
+    <section class="panel">
+      <div class="tabs" role="group" aria-label="Chart">
+        <button class="chip" type="button" data-view="perPlayer" aria-pressed="true">Per player</button>
+        <button class="chip" type="button" data-view="sized" aria-pressed="false">Draw size</button>
+        <button class="chip" type="button" data-view="pot" aria-pressed="false">Pot before the draw</button>
+        <button class="chip" type="button" data-view="games" aria-pressed="false">All three games</button>
+      </div>
+      <div class="chartbox" id="chartbox"><svg class="chart" id="chart" viewBox="0 0 720 300" role="img" aria-label="The season, draw by draw"></svg><div class="tip" id="tip" hidden></div></div>
+      <div class="legend" id="legend"></div>
+      <p class="note" id="chartNote" style="margin:10px 0 0"></p>
+    </section>
+
+    <section class="panel">
+      <h2>Every draw</h2>
+      <p class="note">What the game hands SeasonArc, and what it answers. "Last draw passed" is the last payment as the game passes it back, after its rule above.<span id="stDates"> SeedTogether's dates are its first-Saturday calendar from a 15 January 2027 launch, as in its ECONOMICS.md.</span></p>
+      <div class="tablewrap"><table id="table"></table></div>
+    </section>
+
+    <section class="panel">
+      <h2>Ask the library</h2>
+      <p class="note">One call to <code>SeasonArc.size</code>, as a game makes it. Dollars here, six-decimal units on chain.</p>
+      <div class="ask">
+        <label for="q-pot">Pot ($)<input id="q-pot" inputmode="decimal" value="100000"></label>
+        <label for="q-last">Last draw ($), 0 opens<input id="q-last" inputmode="decimal" value="3000"></label>
+        <label for="q-left">Draws left, this one included<input id="q-left" inputmode="numeric" value="40"></label>
+        <label for="q-inc">Income a draw ($)<input id="q-inc" inputmode="decimal" value="2000"></label>
+        <label for="q-ret">Comes back (%)<input id="q-ret" inputmode="decimal" value="29.9"></label>
+        <label for="q-open">Opening share (%)<input id="q-open" inputmode="decimal" value="25"></label>
+      </div>
+      <div class="answer" id="answer" aria-live="polite"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Checked against the compiled library</h2>
+      <div class="note">
+        <p>This page sizes draws with <code>lab/seasonarc.js</code>, a line-for-line copy of <code>src/SeasonArc.sol</code> in whole numbers, with the contract's rounding and its reverts. <code>lab/vectors.json</code> holds 1,566 calls with the library's answers, and <code>test/Vectors.t.sol</code> checks the compiled library against every one. Run the same cases through this page's copy:</p>
+      </div>
+      <div class="proof">
+        <button class="btn" type="button" id="runCheck">Check this page's copy</button>
+        <span id="checkOut" class="context" aria-live="polite"></span>
+      </div>
+      <p class="hash">Library instructions hash (runtime code without its metadata trailer): 0xc4f7e21e0da4c59421372ffc0770135c73369dd7d2498c115b6a0281c0b6b2fb</p>
+    </section>
+
+    <section class="note">
+      <p><strong>What the games are reduced to.</strong> Each game is cut down to the money SeasonArc sees: what enters the pot before a draw, what the game tells the library to expect next, what it passes back as the last payment, and what comes back to the pot after paying. Lettery TF: $5 tickets, 20% to the treasury, 29.9% of each draw back (the 20% reseed and 30% of a 33% jackpot share, assuming the jackpot is missed, as the game itself tells the library), 40% of a missed jackpot stockpiled except every third miss, the pot and stockpile earning Aave yield weekly, and 2.5x the ticket from 69% of the season for a wallet with under 34.5% of the draws played. BullsTF: $10 tickets, 20% to the treasury, the 10% reseed back, and the same late price at 2.25x. SeedTogether: Aave yield on everything held, 10% to the treasury, income measured since the last draw and scaled to a month, planned at a cushion of 80% rising to 100%, and 20% of each sized draw held in a reserve that pays out over the remaining draws and tops up a draw that would pay less than the last.</p>
+      <p><strong>Checked against each game's own model.</strong> BullsTF matched <code>sim/bulls.py</code> across flat, growing, shrinking, crashing and surging crowds, to the unit on every draw but the closing one, which differs by the cents its prize rounding leaves in the pot. Lettery TF matched <code>sim/trace_season.py</code> with the jackpot never won, on steady crowds of 1,000 to 50,000 (the trace holds its crowd steady), to the unit on every draw but the closing one, within $0.00003. SeedTogether, across the same five crowd shapes, matched <code>sim/seedtogether.py</code> to the unit on every draw but the closing one, within $0.002, and reproduces its published season ($10M from 10,000 wallets at $1,000, 4%: first draw $11,247, last $93,674).</p>
+      <p><strong>What it leaves out.</strong> Winners, tiers and their rounding; jackpot wins; refunded draws under a minimum field. Each game's own Season Lab has its full money. The crowd is one ticket or one average deposit per player.</p>
+    </section>
+  </main>
+</div>
+</div>
+
+<script src="seasonarc.js"></script>
+<script id="engine">
+"use strict";
+// ═══ The three games, cut down to what SeasonArc sees ═══════════════════════════════════════
+// Money in whole USDC units (6 decimals) as BigInt, floor division where the games divide.
+const U = 1000000n, BPS = 10000n;
+const AVG_MONTH = 2629800, YEAR = 365 * 86400;
+
+const HOSTS = {
+  tf: { name: "Lettery TF", draws: 52, drawRange: [4, 156], opening: 25, openRange: [10, 100], ret: 29.9,
+        income: "tickets", ticket: 5, treasury: 20, apr: 4, cadence: "week", anchor: "scaled", crowd: 10000, lateMult: 25000,
+        retNote: "TF: the 20% reseed plus 30% of the 33% jackpot share when the jackpot is missed.",
+        openNote: "TF accepts 10% to 100%; ships at 25%.", drawsNote: "TF: weekly, 4 to 156 draws; ships 52." },
+  bulls: { name: "BullsTF", draws: 30, drawRange: [4, 156], opening: 35, openRange: [10, 50], ret: 10,
+        income: "tickets", ticket: 10, treasury: 20, apr: 0, cadence: "72 hours", anchor: "scaled", crowd: 10000, lateMult: 22500,
+        retNote: "BullsTF: the 10% reseed.", openNote: "BullsTF accepts 10% to 50%; ships at 35%.",
+        drawsNote: "BullsTF: every 72 hours, 4 to 156 draws; ships 30." },
+  st: { name: "SeedTogether", draws: 36, drawRange: [12, 60], opening: 28, openRange: [28, 28], ret: 0,
+        income: "yield", deposit: 1000, treasury: 10, apr: 4, cadence: "month", anchor: "falls", crowd: 10000,
+        retNote: "SeedTogether passes 0: its 20% reseed goes to a reserve outside the pot.",
+        openNote: "SeedTogether: 28%, a constant in the contract.", drawsNote: "SeedTogether: monthly, 12 to 60 draws; ships 36." }
+};
+
+// SeedTogether's calendar: a draw on the first Saturday of each month at 17:00 UK time, the
+// first at least 28 days after launch (Howard Hinnant's civil-date algorithms, as the contract
+// and sim/seedtogether.py use them). Launch as in SeedTogether's ECONOMICS.md: 15 Jan 2027.
+const DAY = 86400, ST_DEPLOY = 1800000000;
+function daysFromCivil(y, m, d) {
+  if (m <= 2) y -= 1;
+  const era = Math.floor(y / 400), yoe = y - era * 400;
+  const doy = Math.floor((153 * (m > 2 ? m - 3 : m + 9) + 2) / 5) + d - 1;
+  const doe = yoe * 365 + Math.floor(yoe / 4) - Math.floor(yoe / 100) + doy;
+  return era * 146097 + doe - 719468;
+}
+function monthOf(t) {
+  const z = Math.floor(t / DAY) + 719468, era = Math.floor(z / 146097), doe = z - era * 146097;
+  const yoe = Math.floor((doe - Math.floor(doe / 1460) + Math.floor(doe / 36524) - Math.floor(doe / 146096)) / 365);
+  const doy = doe - (365 * yoe + Math.floor(yoe / 4) - Math.floor(yoe / 100));
+  const mp = Math.floor((5 * doy + 2) / 153), m = mp < 10 ? mp + 3 : mp - 9;
+  return (yoe + era * 400 + (m <= 2 ? 1 : 0)) * 12 + m - 1;
+}
+function stSlot(month) {
+  const m = month % 12 + 1, d1 = daysFromCivil(Math.floor(month / 12), m, 1);
+  const sat = d1 + (13 - (d1 + 4) % 7) % 7;
+  return sat * DAY + 17 * 3600 - (m >= 4 && m <= 10 ? 3600 : 0);
+}
+function stFirstMonth(deploy) { const lead = deploy + 28 * DAY; let f = monthOf(lead); if (stSlot(f) < lead) f += 1; return f; }
+
+const CROWD_CAP = 1000000;
+function crowdPath(shape, base, strength, draws) {
+  const out = [], mid = Math.ceil(draws / 2);
+  for (let d = 1; d <= draws; d++) {
+    let n = base;
+    if (shape === "grow") n = base * Math.pow(1 + strength / 100, d - 1);
+    else if (shape === "shrink") n = base * Math.pow(1 - strength / 100, d - 1);
+    else if (shape === "crash") n = d > mid ? base * (1 - strength / 100) : base;
+    else if (shape === "surge") n = d > mid ? base * (1 + strength / 100) : base;
+    out.push(Math.min(CROWD_CAP, Math.max(1, Math.round(n))));
+  }
+  return out;
+}
+
+// The last payment as the game passes it back. scaled: TF and BullsTF, by the change in field,
+// floored to 1 so it never reads as an opening. falls: SeedTogether, scaled only when the count
+// fell. raw: unscaled.
+function anchorFor(rule, last, lastN, n) {
+  if (last === 0n) return 0n;
+  if (rule === "scaled" && lastN > 0n && n > 0n) { const a = last * n / lastN; return a === 0n ? 1n : a; }
+  if (rule === "falls" && n < lastN) { const a = last * n / lastN; return a === 0n ? 1n : a; }
+  return last;
+}
+
+// One season. cfg: { host, draws, openingBps, retBps, ticket (USDC units), treasuryBps, aprBps,
+// deposit (units), lateMultBps, anchor, crowd[] }. Returns one row per draw.
+// The crowd at draw d is wallets 0 .. n-1, one ticket each, so a wallet's draws played are the
+// draws so far whose crowd reached it. The ticket games' late price applies from 69% of the
+// season to a wallet with under 34.5% of the draws played; they still tell SeasonArc to expect
+// income at the ordinary price.
+function runSeason(cfg) {
+  const SA = (typeof SeasonArc !== "undefined") ? SeasonArc : globalThis.SeasonArc;
+  const D = cfg.draws, rows = [];
+  let pot = 0n, roll = 0n, reserve = 0n, last = 0n, lastN = 0n, lastPaid = 0n, misses = 0;
+  let treasury = 0n, paidOut = 0n, moneyIn = 0n;
+  const st = cfg.host === "st";
+  // A wallet w has played every earlier draw whose crowd was larger than w, so it is late when
+  // fewer than `need` earlier crowds exceeded it: every wallet past the need-th largest earlier crowd.
+  const need = Math.ceil(D * 3450 / 10000), pastCrowds = [];
+  const firstMonth = stFirstMonth(ST_DEPLOY);
+  let prev = ST_DEPLOY, now = ST_DEPLOY;
+  for (let d = 1; d <= D; d++) {
+    const n = BigInt(cfg.crowd[d - 1]);
+    const left = BigInt(D - d + 1);
+    let income, est, count = n;
+    if (!st) {
+      // Tickets: yield on the pot and the stockpile first (TF), then this draw's tickets.
+      if (cfg.aprBps > 0n) pot += BigInt(Math.floor(Number(pot + roll) * Number(cfg.aprBps) / 10000 / 52));
+      let late = 0;
+      if (d * 100 >= D * 69 && cfg.lateMultBps) {
+        const sorted = pastCrowds.slice().sort((a, b) => b - a);
+        late = Math.max(0, Number(n) - (sorted.length >= need ? sorted[need - 1] : 0));
+      }
+      const lateN = BigInt(late), onTime = n - lateN, latePrice = cfg.ticket * (cfg.lateMultBps || BPS) / BPS;
+      const gross = onTime * cfg.ticket + lateN * latePrice;
+      const slice = onTime * (cfg.ticket * cfg.treasuryBps / BPS) + lateN * (latePrice * cfg.treasuryBps / BPS);
+      income = gross - slice; treasury += slice; moneyIn += gross; pot += income;
+      est = n * cfg.ticket * (BPS - cfg.treasuryBps) / BPS;
+      pastCrowds.push(Number(n));
+    } else {
+      // Yield on everything held since the last draw, deposits as they stood since then, over
+      // the real gap between first-Saturday draws. Income is the window's, scaled to an average
+      // month, as the contract measures it.
+      now = stSlot(firstMonth + d - 1) + 3600;
+      const depPrev = BigInt(cfg.crowd[Math.max(0, d - 2)]) * cfg.deposit;
+      const held = depPrev + pot + reserve;
+      const gross = BigInt(Math.floor(Number(held) * (Math.exp(Number(cfg.aprBps) / 10000 * (now - prev) / YEAR) - 1)));
+      const slice = gross * cfg.treasuryBps / BPS;
+      treasury += slice; pot += gross - slice; moneyIn += gross;
+      income = (gross - slice) * BigInt(AVG_MONTH) / BigInt(now - prev);
+      prev = now;
+      const quarters = BigInt(Math.floor((D + 1) / 3)), taken = BigInt(d - 1);
+      const cushion = quarters > 1n ? 8000n + 2000n * (taken / 3n) / (quarters - 1n) : BPS;
+      est = income * (cushion > BPS ? BPS : cushion) / BPS;
+      count = n < BigInt(cfg.crowd[Math.max(0, d - 2)]) ? n : BigInt(cfg.crowd[Math.max(0, d - 2)]);
+    }
+    const potBefore = pot;
+    const anchor = anchorFor(cfg.anchor, last, lastN, count);
+    let sized, bind;
+    if (st && left === 1n) { sized = pot; bind = 4; }
+    else ({ amount: sized, bind } = SA.size(pot, anchor, left, est, cfg.retBps, cfg.openingBps));
+    const closing = left === 1n;
+    pot -= sized;
+    let paid = sized, toReserve = 0n, fromReserve = 0n;
+    if (st) {
+      if (closing) { fromReserve = reserve; paid = sized + reserve; reserve = 0n; }
+      else {
+        // The reserve: 20% of what was sized goes in, its balance over the draws left comes out,
+        // and it tops a draw up toward the last one's player money (carried per deposit on falls).
+        let lastP = lastPaid;
+        if (count < lastN) lastP = (lastPaid * count + lastN - 1n) / lastN;
+        toReserve = sized * 2000n / BPS;
+        const r = reserve + toReserve;
+        let out = r / left;
+        paid = sized - toReserve + out;
+        if (paid < lastP && r > out) { let top = lastP - paid; if (top > r - out) top = r - out; out += top; paid += top; }
+        fromReserve = out; reserve = r - out;
+      }
+    } else if (!closing) {
+      pot += sized * cfg.retBps / BPS;
+      if (cfg.host === "tf") {
+        const release = misses >= 2;
+        if (!release) roll += sized * 3300n / BPS * 4000n / BPS;
+        misses = release ? 0 : misses + 1;
+      }
+    }
+    paidOut += paid;
+    rows.push({ d, n, when: st ? now : 0, potBefore, income, est, anchor, left, sized, bind, paid, toReserve, fromReserve, reserve, roll, potAfter: pot });
+    if (!st || sized > 0n) last = sized;
+    lastN = count; lastPaid = paid;
+  }
+  return { rows, treasury, paidOut, moneyIn };
+}
+if (typeof module === "object" && module.exports) module.exports = { HOSTS, crowdPath, anchorFor, runSeason };
+</script>
+
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const BINDS = [["Opening share", "--b-open"], ["The arc", "--b-arc"], ["Held level", "--b-held"], ["Nothing to size", "--b-pot"], ["Closing draw", "--b-close"]];
+const CMIN = 100, CMAX = 100000;
+const toCrowd = v => Math.round(CMIN * Math.pow(CMAX / CMIN, v / 1000));
+const fromCrowd = c => Math.round(1000 * Math.log(c / CMIN) / Math.log(CMAX / CMIN));
+const nf = n => Math.round(n).toLocaleString("en-GB");
+const usd = b => Number(b) / 1e6;
+function money(v) { if (!isFinite(v)) return "n/a"; const a = Math.abs(v); if (a < 10) return "$" + v.toFixed(2); if (a < 1e6) return "$" + nf(v); return "$" + (v / 1e6).toFixed(a < 1e7 ? 2 : 1) + "M"; }
+function axisMoney(v) { if (v >= 1e6) return "$" + (+(v / 1e6).toFixed(2)) + "M"; if (v >= 1e4) return "$" + (+(v / 1e3).toFixed(1)) + "k"; if (v >= 100) return "$" + Math.round(v); return "$" + (+v.toFixed(2)); }
+const css = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+let host = "tf", shape = "flat", crowdN = 10000, view = "perPlayer", last = null, timer = null;
+const DEFAULT_STRENGTH = { flat: 0, grow: 2, shrink: 2, crash: 50, surge: 100 };
+
+function setHost(h) {
+  host = h; const H = HOSTS[h];
+  document.querySelectorAll("[data-host]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.host === h)));
+  $("opening").value = H.opening; $("draws").value = H.draws; $("ret").value = H.ret; $("anchor").value = H.anchor;
+  $("ticket").value = H.ticket || 5; $("deposit").value = H.deposit || 1000; $("apr").value = H.apr;
+  $("ticketCtl").hidden = H.income !== "tickets"; $("depositCtl").hidden = H.income !== "yield";
+  $("aprCtl").hidden = h === "bulls";
+  $("crowdLabel").textContent = H.income === "yield" ? "Wallets in" : "Players a draw";
+  $("openingNote").textContent = H.openNote; $("drawsNote").textContent = H.drawsNote; $("retNote").textContent = H.retNote;
+  $("ticketNote").textContent = h === "tf" ? "TF ships $5; 20% goes to the treasury." : "BullsTF ships $10; 20% goes to the treasury.";
+  $("aprNote").textContent = h === "tf" ? "On the pot and the jackpot stockpile, added weekly." : "On deposits, the pot and the reserve; 10% of it to the treasury.";
+  schedule();
+}
+function setShape(s, keepStrength) {
+  shape = s;
+  document.querySelectorAll("[data-shape]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.shape === s)));
+  $("strengthCtl").hidden = s === "flat";
+  if (!keepStrength) $("strength").value = DEFAULT_STRENGTH[s];
+  const st = $("strength");
+  if (s === "grow" || s === "shrink") { st.max = 10; st.step = 0.25; } else { st.max = s === "crash" ? 95 : 300; st.step = 1; }
+  schedule();
+}
+function config() {
+  const H = HOSTS[host], v = id => +$(id).value;
+  const draws = v("draws");
+  return { host, draws, openingBps: BigInt(Math.round(v("opening") * 100)), retBps: BigInt(Math.round(v("ret") * 100)),
+    ticket: BigInt(v("ticket")) * U, treasuryBps: BigInt(H.treasury * 100), aprBps: BigInt(Math.round(v("apr") * 100)),
+    deposit: BigInt(v("deposit")) * U, lateMultBps: BigInt(H.lateMult || 0), anchor: $("anchor").value, crowd: crowdPath(shape, crowdN, v("strength"), draws) };
+}
+function labels() {
+  const v = id => +$(id).value, H = HOSTS[host];
+  $("o-crowd").textContent = nf(crowdN);
+  $("o-opening").textContent = v("opening") + "%"; $("o-draws").textContent = v("draws") + " draws";
+  $("o-ret").textContent = (+v("ret")).toFixed(1).replace(/\.0$/, "") + "%";
+  $("o-ticket").textContent = "$" + v("ticket"); $("o-deposit").textContent = "$" + nf(v("deposit")); $("o-apr").textContent = v("apr") + "%";
+  const s = v("strength"), mid = Math.ceil(v("draws") / 2);
+  const endGrow = crowdPath("grow", crowdN, s, v("draws")).pop();
+  const lab = { grow: ["Growth per draw", "+" + s + "%", `${nf(crowdN)} at the start, ${nf(endGrow)} by the end${endGrow >= CROWD_CAP ? " (the lab stops at a million)" : ""}.`],
+    shrink: ["Loss per draw", "−" + s + "%", `${nf(crowdN)} at the start, ${nf(crowdPath("shrink", crowdN, s, v("draws")).pop())} by the end.`],
+    crash: ["Leave at once", s + "%", `From draw ${mid + 1}, ${nf(Math.max(1, Math.round(crowdN * (1 - s / 100))))} stay.`],
+    surge: ["Arrive at once", "+" + s + "%", `From draw ${mid + 1}, ${nf(Math.round(crowdN * (1 + s / 100)))} play.`] }[shape];
+  if (lab) { $("strengthLabel").textContent = lab[0]; $("o-strength").textContent = lab[1]; $("strengthNote").textContent = lab[2]; }
+  document.querySelectorAll("[data-crowd]").forEach(b => b.setAttribute("aria-pressed", String(+b.dataset.crowd === crowdN)));
+  // Settings that differ from the game as shipped, and settings the game itself would refuse.
+  const diffs = [], refuse = [];
+  if (v("opening") !== H.opening) diffs.push("opening");
+  if (v("draws") !== H.draws) diffs.push("season length");
+  if (Math.abs(v("ret") - H.ret) > 1e-9) diffs.push("what comes back");
+  if ($("anchor").value !== H.anchor) diffs.push("how the last draw is passed back");
+  if (H.income === "tickets" && v("ticket") !== H.ticket) diffs.push("ticket price");
+  if (H.income === "yield" && v("deposit") !== H.deposit) diffs.push("average deposit");
+  if (v("opening") < H.openRange[0] || v("opening") > H.openRange[1]) refuse.push(H.openNote);
+  if (v("draws") < H.drawRange[0] || v("draws") > H.drawRange[1]) refuse.push(H.drawsNote);
+  if (host === "bulls" && Math.min(...crowdPath(shape, crowdN, v("strength"), v("draws"))) < 100) refuse.push("BullsTF refunds a draw with fewer than 100 tickets and runs it again; here it runs.");
+  const msg = (diffs.length ? `Changed from ${H.name} as shipped: ${diffs.join(", ")}. ` : "") + (refuse.length ? `${H.name} itself would refuse this: ${refuse.join(" ")} SeasonArc still answers.` : "");
+  $("changed").hidden = !msg; $("changed").textContent = msg;
+}
+function schedule() { labels(); $("results").classList.add("busy"); clearTimeout(timer); timer = setTimeout(() => requestAnimationFrame(run), 80); }
+
+function run() {
+  const cfg = config();
+  const main = runSeason(cfg);
+  const others = {};
+  if ($("compare").checked) for (const a of ["scaled", "falls", "raw"]) if (a !== cfg.anchor) others[a] = runSeason({ ...cfg, anchor: a });
+  last = { cfg, main, others };
+  render(); $("results").classList.remove("busy");
+}
+
+function perPlayer(r) { return usd(r.paid) / Number(r.n); }
+function series(res, key) {
+  return res.rows.map(r => ({ d: r.d, y: key === "perPlayer" ? perPlayer(r) : key === "pot" ? usd(r.potBefore) : usd(r.paid), r }));
+}
+
+function render() {
+  if (!last) return;
+  const { cfg, main } = last, H = HOSTS[host], R = main.rows, first = R[0], end = R[R.length - 1];
+  const yieldGame = H.income === "yield";
+  const dep = Number(cfg.deposit) / 1e6;
+  const startCrowd = cfg.crowd[0];
+  $("context").textContent = yieldGame
+    ? `${nf(startCrowd)} wallets at ${money(dep)} average · ${money(startCrowd * dep)} deposited at the start · ${money(usd(main.moneyIn))} of yield over the season · treasury ${money(usd(main.treasury))}`
+    : `${nf(startCrowd)} players a draw at the start · ${money(startCrowd * usd(cfg.ticket))} of tickets a draw · ${money(usd(main.moneyIn))} a season · treasury ${money(usd(main.treasury))}`;
+  const pp = R.map(perPlayer), falls = pp.filter((x, i) => i > 0 && x < pp[i - 1] - 1e-9).length;
+  const fallsDraws = pp.map((x, i) => i > 0 && x < pp[i - 1] - 1e-9 ? R[i].d : 0).filter(Boolean);
+  const binds = [0, 0, 0, 0, 0]; R.forEach(r => binds[r.bind]++);
+  const tiles = [
+    ["Draw 1", money(usd(first.paid)), `${money(pp[0])} a player`, ""],
+    ["Closing draw", money(usd(end.paid)), `${money(pp[pp.length - 1])} a player`, ""],
+    ["Climb a player", pp[0] > 0 ? (pp[pp.length - 1] / pp[0]).toFixed(1) + "x" : "n/a", "closing draw over draw 1", ""],
+    ["Draws where a player's share fell", String(falls), falls ? "draw " + fallsDraws.slice(0, 4).join(", ") + (fallsDraws.length > 4 ? "…" : "") : "it rose or held every draw", falls ? "warn" : "good"],
+    ["Paid out over the season", money(usd(main.paidOut)), yieldGame ? "the yield after the treasury's 10%, spent to nothing" : "the pot, spent to nothing", ""],
+    ["Sized by the arc", `${binds[1]} of ${R.length}`, `opening ${binds[0]} · held ${binds[2]} · closing ${binds[4]}${binds[3] ? " · nothing " + binds[3] : ""}`, ""]
+  ];
+  $("tiles").innerHTML = tiles.map(([k, v, s, c]) => `<div class="tile"><span class="k">${k}</span><span class="v ${c}">${v}</span><span class="s">${s}</span></div>`).join("");
+  chart(); table();
+}
+
+const ANCHOR_NAME = { scaled: "scaled to the crowd", falls: "scaled on falls only", raw: "unscaled" };
+const DASH = { scaled: "9 3 2 3", falls: "2 3", raw: "7 4" };
+const dashKey = d => `<svg width="20" height="6" aria-hidden="true" style="vertical-align:middle;margin-right:6px"><line x1="0" y1="3" x2="20" y2="3" stroke="currentColor" stroke-width="2" stroke-dasharray="${d}"/></svg>`;
+function chart() {
+  const svg = $("chart"), W = Math.max(340, Math.round($("chartbox").clientWidth || 720)), H = W < 560 ? 260 : 320;
+  const L = 64, Rm = 16, T = 14, B = 36, { cfg, main, others } = last, n = cfg.draws;
+  let lines = [];
+  if (view === "games") {
+    for (const h of ["tf", "bulls", "st"]) {
+      const G = HOSTS[h], c = { ...cfg, host: h, draws: G.draws, openingBps: BigInt(G.opening * 100), retBps: BigInt(Math.round(G.ret * 100)),
+        ticket: BigInt(G.ticket || 5) * U, treasuryBps: BigInt(G.treasury * 100), aprBps: BigInt(G.apr * 100), deposit: BigInt(G.deposit || 1000) * U,
+        lateMultBps: BigInt(G.lateMult || 0), anchor: G.anchor, crowd: crowdPath(shape, crowdN, +$("strength").value, G.draws) };
+      const res = runSeason(c), total = res.rows.reduce((a, r) => a + usd(r.paid), 0);
+      lines.push({ name: G.name, color: h === "tf" ? css("--b-arc") : h === "bulls" ? css("--b-open") : css("--b-held"),
+        pts: res.rows.map(r => ({ x: (r.d - 1) / Math.max(1, G.draws - 1), y: 100 * usd(r.paid) / total, r })), dots: false });
+    }
+  } else {
+    const key = view;
+    const mainY = series(main, key).map(p => p.y);
+    for (const [a, res] of Object.entries(others)) {
+      const pts = series(res, key).map(p => ({ x: (p.d - 1) / Math.max(1, n - 1), y: p.y, r: p.r }));
+      const same = pts.every((p, i) => Math.abs(p.y - mainY[i]) <= 1e-9 * Math.max(1, Math.abs(mainY[i])));
+      lines.push({ name: ANCHOR_NAME[a], color: css("--graphite"), faint: true, dash: DASH[a], same, pts });
+    }
+    lines.push({ name: ANCHOR_NAME[cfg.anchor], color: css("--trace"), dots: true, pts: series(main, key).map(p => ({ x: (p.d - 1) / Math.max(1, n - 1), y: p.y, r: p.r })) });
+  }
+  const all = lines.flatMap(l => l.pts.map(p => p.y)).filter(isFinite);
+  let ymax = Math.max(...all, 0) * 1.08 || 1;
+  const nice = v => { const e = Math.pow(10, Math.floor(Math.log10(v))), q = v / e; return (q <= 1 ? 1 : q <= 2 ? 2 : q <= 5 ? 5 : 10) * e; };
+  const step = nice(ymax / 5); ymax = Math.ceil(ymax / step) * step;
+  const X = x => L + x * (W - L - Rm), Y = v => T + (1 - v / ymax) * (H - T - B);
+  const fmt = view === "games" ? (v => (+v.toFixed(1)) + "%") : axisMoney;
+  let s = "";
+  for (let v = 0; v <= ymax + 1e-9; v += step) s += `<line x1="${L}" x2="${W - Rm}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--grid)" stroke-width="1"/><text x="${L - 6}" y="${Y(v) + 4}" text-anchor="end">${fmt(v)}</text>`;
+  if (view === "games") {
+    [0, .25, .5, .75, 1].forEach(x => s += `<text x="${X(x)}" y="${H - 16}" text-anchor="middle">${Math.round(x * 100)}%</text>`);
+    s += `<text x="${(L + W - Rm) / 2}" y="${H - 2}" text-anchor="middle">through the season</text>`;
+  } else {
+    const ticks = [...new Set([1, Math.round(n / 4), Math.round(n / 2), Math.round(3 * n / 4), n])].filter(d => d >= 1);
+    ticks.forEach(d => s += `<text x="${X((d - 1) / Math.max(1, n - 1))}" y="${H - 16}" text-anchor="middle">${d}</text>`);
+    s += `<text x="${(L + W - Rm) / 2}" y="${H - 2}" text-anchor="middle">draw</text>`;
+  }
+  for (const l of lines) {
+    const path = l.pts.map((p, i) => (i ? "L" : "M") + X(p.x).toFixed(1) + "," + Y(p.y).toFixed(1)).join("");
+    if (l.faint) s += `<path d="${path}" fill="none" stroke="${l.color}" stroke-width="1.6" stroke-dasharray="${l.dash}" opacity=".85"/>`;
+    else {
+      if (l.dots) { const area = path + `L${X(l.pts[l.pts.length - 1].x)},${Y(0)}L${X(l.pts[0].x)},${Y(0)}Z`; s += `<path d="${area}" fill="var(--trace-soft)" stroke="none"/>`; }
+      s += `<path d="${path}" fill="none" stroke="${l.color}" stroke-width="2.25" stroke-linejoin="round"/>`;
+    }
+    if (l.dots) { const rad = l.pts.length > 80 ? 2.2 : 3.2; l.pts.forEach(p => s += `<circle cx="${X(p.x).toFixed(1)}" cy="${Y(p.y).toFixed(1)}" r="${rad}" fill="var(${BINDS[p.r.bind][1]})"/>`); }
+  }
+  s += `<line id="guide" x1="0" x2="0" y1="${T}" y2="${H - B}" stroke="var(--graphite)" stroke-width="1" visibility="hidden"/>`;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = s; svg._geo = { X, L, Rm, W, lines };
+  let lg = "";
+  if (view === "games") lg = lines.map(l => `<span><i class="line" style="background:${l.color}"></i>${l.name}</span>`).join("");
+  else {
+    const used = new Set(last.main.rows.map(r => r.bind));
+    lg = BINDS.map(([nm, v], i) => used.has(i) ? `<span><i style="background:var(${v})"></i>${nm}</span>` : "").join("");
+    for (const l of lines.filter(x => x.faint)) lg += `<span>${dashKey(l.dash)}${l.name}${l.same ? " (same as the solid line here)" : ""}</span>`;
+  }
+  $("legend").innerHTML = lg;
+  const st = host === "st";
+  $("chartNote").textContent = {
+    perPlayer: st ? "What a wallet's share of each draw's player money comes to: the draw's payout, reserve included, divided by wallets in. Dots are coloured by the rule SeasonArc used." : "The draw's size divided by the players in it. Dots are coloured by the rule SeasonArc used. Dashed: the same season with the last draw passed back under the other two rules.",
+    sized: st ? "What players are paid each draw: SeasonArc's size less the 20% kept for the reserve, plus what the reserve releases." : "What SeasonArc sized each draw at.",
+    pot: "What the game held for prizes when the draw was sized, this draw's money included.",
+    games: "Each game as shipped, on the same crowd, as a share of all it pays over its season, so seasons of different lengths and sizes sit on one scale."
+  }[view];
+}
+function table() {
+  const st = host === "st", R = last.main.rows;
+  $("stDates").hidden = !st;
+  const head = `<thead><tr><th>Draw</th><th>${st ? "Wallets" : "Players"}</th><th>Pot</th><th>Income told</th><th>Last draw passed</th><th>Left</th><th>Sized</th><th>Rule</th>${st ? "<th>Paid</th><th>Reserve after</th>" : ""}<th>A player</th></tr></thead>`;
+  const date = t => new Date(t * 1000).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+  const body = R.map(r => `<tr><td>${r.d}${st ? " · " + date(r.when) : ""}</td><td>${nf(Number(r.n))}</td><td>${money(usd(r.potBefore))}</td><td>${money(usd(r.est))}</td><td>${r.anchor === 0n ? "0 (opens)" : money(usd(r.anchor))}</td><td>${r.left}</td><td>${money(usd(r.sized))}</td>`
+    + `<td><span class="bind"><i style="background:var(${BINDS[r.bind][1]})"></i>${BINDS[r.bind][0]}</span></td>`
+    + (st ? `<td>${money(usd(r.paid))}</td><td>${money(usd(r.reserve))}</td>` : "") + `<td>${money(perPlayer(r))}</td></tr>`).join("");
+  $("table").innerHTML = head + `<tbody>${body}</tbody>`;
+}
+
+$("chart").addEventListener("mousemove", ev => {
+  const svg = $("chart"), g = svg._geo; if (!g || !g.lines.length) return;
+  const rect = svg.getBoundingClientRect(), x = ((ev.clientX - rect.left) / rect.width * g.W - g.L) / (g.W - g.L - g.Rm);
+  const main = g.lines[g.lines.length - 1];
+  let best = main.pts[0]; for (const p of main.pts) if (Math.abs(p.x - x) < Math.abs(best.x - x)) best = p;
+  const gl = document.getElementById("guide"); if (gl) { gl.setAttribute("x1", g.X(best.x)); gl.setAttribute("x2", g.X(best.x)); gl.setAttribute("visibility", "visible"); }
+  const tip = $("tip"); tip.hidden = false;
+  if (view === "games") {
+    const parts = g.lines.map(l => { let b = l.pts[0]; for (const p of l.pts) if (Math.abs(p.x - best.x) < Math.abs(b.x - best.x)) b = p; return `${l.name.split(" ")[0]} ${b.y.toFixed(1)}%`; });
+    tip.textContent = `${Math.round(best.x * 100)}% through · ` + parts.join(" · ");
+  } else {
+    const r = best.r;
+    tip.textContent = `Draw ${r.d} · ${view === "perPlayer" ? money(perPlayer(r)) + " a player" : view === "pot" ? money(usd(r.potBefore)) + " pot" : money(usd(r.paid))} · ${BINDS[r.bind][0].toLowerCase()}`;
+  }
+  const px = g.X(best.x) / g.W * rect.width; tip.style.left = Math.min(rect.width - tip.offsetWidth - 4, Math.max(0, px + 8)) + "px"; tip.style.top = "6px";
+});
+$("chart").addEventListener("mouseleave", () => { $("tip").hidden = true; const gl = document.getElementById("guide"); if (gl) gl.setAttribute("visibility", "hidden"); });
+
+// Ask the library.
+function toUnits(s) { const t = String(s).trim().replace(/[$,\s]/g, ""); if (!/^\d*(\.\d{0,6})?$/.test(t) || t === "" || t === ".") return null; const [a, b = ""] = t.split("."); return BigInt(a || "0") * U + BigInt((b + "000000").slice(0, 6)); }
+function toBps(s) { const t = String(s).trim().replace("%", ""); if (!/^\d*(\.\d{0,2})?$/.test(t) || t === "" || t === ".") return null; const [a, b = ""] = t.split("."); return BigInt(a || "0") * 100n + BigInt((b + "00").slice(0, 2)); }
+function ask() {
+  const pot = toUnits($("q-pot").value), lastP = toUnits($("q-last").value), inc = toUnits($("q-inc").value);
+  const left = /^\d+$/.test($("q-left").value.trim()) ? BigInt($("q-left").value.trim()) : null;
+  const ret = toBps($("q-ret").value), open = toBps($("q-open").value);
+  const out = $("answer");
+  if ([pot, lastP, inc, left, ret, open].some(x => x === null)) { out.textContent = "Each box takes a plain number: dollars to six decimals, percentages to two."; return; }
+  if (left > 400n) { out.textContent = "Draws left: up to 400 here. The library takes any number, at gas that grows with it."; return; }
+  try {
+    const r = SeasonArc.size(pot, lastP, left, inc, ret, open);
+    const why = ["the opening draw pays the opening share of the pot", "the steepest rise from the last draw that still lasts the season", "the arc would run dry, so the largest level payment the season can carry", "nothing to size: no draws left, or an empty pot", "the last draw takes the whole pot"][r.bind];
+    out.innerHTML = `<b>${money(usd(r.amount))}</b> · ${BINDS[r.bind][0]}<br><span class="note">${why}. On chain: ${r.amount.toString()} units, bind ${r.bind}.</span>`;
+  } catch (e) {
+    out.textContent = e instanceof SeasonArc.SeasonArcRevert ? `The library reverts: ${e.reason}. ${e.reason === "BadReturnShare()" ? "What comes back must be under 100%." : e.reason === "OpeningShareTooLarge()" ? "The opening share can be at most 100%." : "A figure overflows the contract's arithmetic."}` : "Something went wrong: " + e.message;
+  }
+}
+["q-pot", "q-last", "q-left", "q-inc", "q-ret", "q-open"].forEach(id => $(id).addEventListener("input", ask));
+
+// The page's copy against the library's answers.
+$("runCheck").addEventListener("click", async () => {
+  const btn = $("runCheck"), out = $("checkOut"); btn.disabled = true; out.textContent = "Loading the cases…";
+  try {
+    const res = await fetch("vectors.json", { cache: "no-store" });
+    if (!res.ok) throw new Error("vectors.json did not load (" + res.status + ")");
+    const v = await res.json();
+    let bad = 0, i = 0;
+    const step = () => {
+      const stop = Math.min(v.count, i + 120);
+      for (; i < stop; i++) {
+        const c = ["pot", "lastPaid", "drawsLeft", "income", "returnBps", "openingBps"].map(k => BigInt(v[k][i]));
+        let ok;
+        try { const r = SeasonArc.size(...c); ok = v.reverts[i] === "0" && r.amount.toString() === v.amount[i] && String(r.bind) === v.bind[i]; }
+        catch (e) { ok = v.reverts[i] === "1"; }
+        if (!ok) bad++;
+      }
+      out.textContent = `${nf(i)} of ${nf(v.count)} checked`;
+      if (i < v.count) setTimeout(step, 0);
+      else { out.textContent = bad === 0 ? `All ${nf(v.count)} cases match the compiled library's answers.` : `${bad} of ${nf(v.count)} cases differ.`; btn.disabled = false; }
+    };
+    step();
+  } catch (e) { out.textContent = "Could not load the cases: " + e.message + ". The check runs on the published page."; btn.disabled = false; }
+});
+
+$("crowdChips").innerHTML = [100, 1000, 10000, 100000].map(v => `<button class="chip" type="button" data-crowd="${v}">${nf(v)}</button>`).join("");
+document.querySelectorAll("[data-crowd]").forEach(b => b.addEventListener("click", () => { crowdN = +b.dataset.crowd; $("crowd").value = fromCrowd(crowdN); schedule(); }));
+$("crowd").addEventListener("input", () => { crowdN = toCrowd(+$("crowd").value); schedule(); });
+document.querySelectorAll("[data-host]").forEach(b => b.addEventListener("click", () => setHost(b.dataset.host)));
+document.querySelectorAll("[data-shape]").forEach(b => b.addEventListener("click", () => setShape(b.dataset.shape)));
+document.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => { view = b.dataset.view; document.querySelectorAll("[data-view]").forEach(x => x.setAttribute("aria-pressed", String(x === b))); render(); }));
+["opening", "draws", "ret", "ticket", "deposit", "apr", "strength"].forEach(id => $(id).addEventListener("input", schedule));
+["anchor", "compare"].forEach(id => $(id).addEventListener("change", schedule));
+$("reset").addEventListener("click", () => { crowdN = HOSTS[host].crowd; $("crowd").value = fromCrowd(crowdN); setShape("flat"); setHost(host); });
+let rz; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(render, 150); });
+
+$("crowd").value = fromCrowd(crowdN); setShape("crash", false); setHost("tf"); ask();
+</script>
+</body>
+</html>
