@@ -10,7 +10,9 @@ The sizing solvers are an automatic distribution system: they decide, from the p
 much a game pays each draw, with no one setting the rate. Breath and SeasonArc do it for two
 endings: a pool with no end date, and a season with a last draw.
 
-**Pre-testnet. Not deployed, not audited.** Each library's known limits are in its own
+**SeasonArc is on Base Sepolia, a test network, linked by 17 test contracts
+([details](sizing/season-arc/README.md#on-a-test-network)). Breath and EternalSeed are
+pre-testnet. None is audited.** Each library's known limits are in its own
 KNOWN_ISSUES.md.
 
 Where the ideas came from is in [ORIGIN.md](ORIGIN.md). The library names are working names,

@@ -37,8 +37,8 @@ for different games. A game with no end date needs to know what it can afford fo
 a last draw wants its prizes to rise toward it, whether its money comes from tickets or from a
 savings pot being spent down to zero. So there are sizing libraries for each kind of game, and
 each grew out of a game. Two are in this repository, Breath and SeasonArc; the first, the floor by
-a deadline, stays inside BullsEthCRE for now. They are tested only in their own test suites, and
-none has run on a test network yet.
+a deadline, stays inside BullsEthCRE for now. SeasonArc has since run on a test network,
+linked by three hosts; Breath is tested only in its own test suite so far.
 
 I came at the seed and the breath from the game side. Only later did I find that finance has its
 own versions. Endowments like Yale's smooth their spending so a fund can last forever, and

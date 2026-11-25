@@ -4,7 +4,9 @@ A Solidity library that decides what each draw of a fixed-length season should p
 the game holds now and the number of draws left. Payments rise across the season, and the pot
 is spent down by the last draw.
 
-**Pre-testnet. Not deployed, not audited.** The design is the author's, arrived at independently;
+**On Base Sepolia, a test network. Not audited.** One copy of SeasonArc 1.1.6 is deployed there,
+its source verified on Basescan, and 17 test contracts from three hosts link it
+([On a test network](#on-a-test-network)). The design is the author's, arrived at independently;
 how it sits beside related work is in [DESIGN.md](DESIGN.md#related-work). AI was the researcher,
 the economic modeller and the co-developer: writing the Solidity, each step tested and reviewed
 before the next began. What is unproven or carried as a known limit is in
@@ -112,15 +114,70 @@ Each host carries a copy of this folder and links the library unedited. Which co
 
 | Host                  | SeasonArc | `src/SeasonArc.sol` matches commit |
 |-----------------------|-----------|------------------------------------|
-| Lettery TF 1.4.7      | 1.1.6     | `23c0357`                          |
+| Lettery TF 1.4.8-preview | 1.1.6     | `23c0357`                          |
 | BullsTF 0.3.8         | 1.1.6     | `23c0357`                          |
-| SeedTogether 0.78     | 1.1.6     | `23c0357`                          |
+| SeedTogether 0.84     | 1.1.6     | `23c0357`                          |
+| Weather TF 0.2.15     | 1.1.6     | `23c0357`                          |
+| SeasonStaking 0.1.0   | 1.1.6     | `23c0357`                          |
 
 1.1.6 changes one comment from 1.1.5 and no code: the instructions are the same, but the metadata
 trailer records the source, so a build of 1.1.6 has a different code hash and address from a
 build of 1.1.5. A host moving to 1.1.6 deploys and links a new copy; its instructions pin does
 not change. A host's documents outside `src/` may differ from this folder's at the same
 version; the source is what the table compares.
+
+## On a test network
+
+Base Sepolia (chain 84532), test money only. One copy of SeasonArc 1.1.6 sits at
+[`0xDaD8C9Fa842f77151713FD4a8C7BD52330c14Cb1`](https://sepolia.basescan.org/address/0xDaD8C9Fa842f77151713FD4a8C7BD52330c14Cb1#code),
+its source verified on Basescan (Exact Match): 1,310 runtime bytes, with the instructions hash in
+the table under "Checking a linked copy". Every contract below links that copy: the address is in
+each one's code on chain (checked 25 November 2026).
+
+| Host | Contracts | What the runs covered |
+|------|-----------|-----------------------|
+| Lettery TF | 7 games | a full 52-draw season, an empty draw and refused entries, a 100-ticket draw, a dry run of the mainnet deploy |
+| BullsTF | 6 seasons | seasons of 4 to 24 draws: a draw cancelled under the minimum field and reopened, a stalled game closed by anyone, the keeper's report path, late whales against a control |
+| SeedTogether | 3 short seasons and the shipping build | 20-minute draws on Aave's test market: a few large savers, then 500 small ones, then 100 with real Aave rates, an exit from Aave and back, and a late whale; the shipping build deployed, no draws run |
+
+<details>
+<summary>Addresses</summary>
+
+| Host | Contract | Address |
+|------|----------|---------|
+| Lettery TF | game 1 | [`0x03477bab62df1d980f831b39790606a17b2eb5db`](https://sepolia.basescan.org/address/0x03477bab62df1d980f831b39790606a17b2eb5db) |
+| Lettery TF | game 2 | [`0x491bf15a0d48fd06e44b3fcb1adb97e64cb0bd4b`](https://sepolia.basescan.org/address/0x491bf15a0d48fd06e44b3fcb1adb97e64cb0bd4b) |
+| Lettery TF | game 3 | [`0xf9630825b6ccaa306cb5cd11c2a9e65c98175291`](https://sepolia.basescan.org/address/0xf9630825b6ccaa306cb5cd11c2a9e65c98175291) |
+| Lettery TF | game 4 | [`0x84ee2bf4ec8954c26ec03f2ab6202ddcc877b3b4`](https://sepolia.basescan.org/address/0x84ee2bf4ec8954c26ec03f2ab6202ddcc877b3b4) |
+| Lettery TF | game 5, the 52-draw season | [`0x84be463042c62d51b18d6c180904256f8b235299`](https://sepolia.basescan.org/address/0x84be463042c62d51b18d6c180904256f8b235299) |
+| Lettery TF | game 6 | [`0x471f1070d29f89cf4dae555be9a1c800472fe7e5`](https://sepolia.basescan.org/address/0x471f1070d29f89cf4dae555be9a1c800472fe7e5) |
+| Lettery TF | game 7, mainnet dry run | [`0xb5bb5a26bd88dafd66e8015f4ecae9d4c1ae9f9f`](https://sepolia.basescan.org/address/0xb5bb5a26bd88dafd66e8015f4ecae9d4c1ae9f9f) |
+| BullsTF | season 1 | [`0xcCE03EF2fc52a1dC8b4Ef69eFA0b309AeA6F76F7`](https://sepolia.basescan.org/address/0xcCE03EF2fc52a1dC8b4Ef69eFA0b309AeA6F76F7) |
+| BullsTF | season 2 | [`0xd10FFd586deD5f06D012761Bb3983D3348B17158`](https://sepolia.basescan.org/address/0xd10FFd586deD5f06D012761Bb3983D3348B17158) |
+| BullsTF | season 3 | [`0x8D8661B8D79B2f3965A442705a92E4b48568F245`](https://sepolia.basescan.org/address/0x8D8661B8D79B2f3965A442705a92E4b48568F245) |
+| BullsTF | season 4 | [`0x332509213F0887072D6668A6f1a8C7cB6F2015b6`](https://sepolia.basescan.org/address/0x332509213F0887072D6668A6f1a8C7cB6F2015b6) |
+| BullsTF | season 5, control | [`0xB711677D61cFB4d116C07e1Bba1047f00c2dEf59`](https://sepolia.basescan.org/address/0xB711677D61cFB4d116C07e1Bba1047f00c2dEf59) |
+| BullsTF | season 6, a test build with two extra entry rules, not in BullsTF's repository | [`0x8C0E6Ce55431B7cB90d8d3D875B7a3511a82Ee4A`](https://sepolia.basescan.org/address/0x8C0E6Ce55431B7cB90d8d3D875B7a3511a82Ee4A) |
+| SeedTogether | season 1 | [`0x3aba83f7c795601fb2e7b8e80f4d04fc0d79c210`](https://sepolia.basescan.org/address/0x3aba83f7c795601fb2e7b8e80f4d04fc0d79c210) |
+| SeedTogether | season 2 | [`0xe38a25627bc77784db67dca113aedcfc4c80835a`](https://sepolia.basescan.org/address/0xe38a25627bc77784db67dca113aedcfc4c80835a) |
+| SeedTogether | season 3 | [`0x46decba3d45f9297df8006b2791125bf529470c4`](https://sepolia.basescan.org/address/0x46decba3d45f9297df8006b2791125bf529470c4) |
+| SeedTogether | shipping build | [`0x11864d64f514768937a7e50b2c87f16d96520fc0`](https://sepolia.basescan.org/address/0x11864d64f514768937a7e50b2c87f16d96520fc0) |
+
+</details>
+
+What the runs showed for SeasonArc, from BullsTF's seasons:
+
+- **The last draw paid the most.** In the 24-draw season 3 it paid $211.63 against $152.09 the
+  draw before, and in the 12-draw season 4 $12.21 against $8.27.
+- **It sizes on the field each draw has.** In season 4 a draw's total fell twice, both times when
+  fewer tickets were bought, while the amount paid per ticket rose every draw, from $0.025 to
+  $0.22.
+- **The pot was paid out.** Each season that reached its last draw ended with the contract holding
+  only rounding once every winner had claimed.
+
+The draws, settlement transactions and snags for each host are in that host's own
+`SEPOLIA_TESTS.md`; those repositories are private for now. Weather TF and SeasonStaking carry
+the same source and have not run on a test network yet.
 
 ## Season Lab
 
