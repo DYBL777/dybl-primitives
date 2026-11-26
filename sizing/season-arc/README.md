@@ -165,7 +165,9 @@ each one's code on chain (checked 25 November 2026).
 
 </details>
 
-What the runs showed for SeasonArc, from BullsTF's seasons:
+What the runs showed for SeasonArc.
+
+From BullsTF's seasons:
 
 - **The last draw paid the most.** In the 24-draw season 3 it paid $211.63 against $152.09 the
   draw before, and in the 12-draw season 4 $12.21 against $8.27.
@@ -174,6 +176,26 @@ What the runs showed for SeasonArc, from BullsTF's seasons:
   $0.22.
 - **The pot was paid out.** Each season that reached its last draw ended with the contract holding
   only rounding once every winner had claimed.
+
+From SeedTogether's three 12-draw seasons, where SeasonArc sizes each draw from the interest on
+the savers' deposits. SeedTogether's reserve, and its rule that tops a draw up from the reserve to
+the last prize per ticket, are its own, not SeasonArc's:
+
+- **Prizes rose to a closing draw that emptied the pot.** In season 1 (21 savers of about
+  $100,000) the prize total rose every draw, from $1,440.61 to $19,513.02, and in season 2 (500
+  savers of about $1,100, with new money arriving twice) from $652.49 to $3,726.68. In both, the
+  closing draw left the pot and the reserve at zero.
+- **A sudden fall was sized from before the fall.** A minute before season 1's draw 5, savers
+  holding $400,000 (20%) withdrew. The draw paid $2,614.80, against $2,571.14 the draw before.
+- **When the interest stopped, SeasonArc stepped down.** In season 3 (100 savers, Aave's real
+  monthly rates from December 2025 to November 2026) the money left Aave for two draws. SeasonArc
+  sized draw 4 at $58.90; SeedTogether's reserve paid it at $75.42, the same as draw 3, and draw 5
+  paid $74.04 (1.8% less) as the reserve ran out. From draw 6 every draw paid more than the one
+  before, to $1,238.86 at the close.
+- **A late whale took a small share.** $100,000, more than every other saver together, arrived
+  19 minutes before season 3's closing draw. Weighted by money and time held (SeedTogether 0.84's
+  rule), it held 8.2% of the odds and won $152.95, against about $858 its money earned in that
+  time.
 
 The draws, settlement transactions and snags for each host are in that host's own
 `SEPOLIA_TESTS.md`; those repositories are private for now. Weather TF and SeasonStaking carry
