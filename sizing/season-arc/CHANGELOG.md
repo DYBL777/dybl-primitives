@@ -90,9 +90,10 @@ repository, every change to its logic included, is in Lettery TF's CHANGELOG up 
 ## Comments and documentation
 
 **After 1.1.6, Base Sepolia.** The README records the deployed copy on Base Sepolia, its verified
-source, the 17 host contracts that link it, and what BullsTF's and SeedTogether's runs showed;
-DESIGN.md's Evidence points there. Its host table lists Lettery TF 1.4.8-preview, SeedTogether
-0.84, Weather TF 0.2.15 and SeasonStaking 0.1.0. No code change.
+source, the 23 host contracts that link it, and what Lettery TF's, BullsTF's, SeedTogether's and
+Weather TF's runs showed; DESIGN.md's Evidence points there. KNOWN_ISSUES gains an entry on money
+that arrives only for the last draws. The host table lists Lettery TF 1.4.8-preview, BullsTF
+0.3.16-preview, SeedTogether 0.84, Weather TF 0.2.17 and SeasonStaking 0.1.0. No code change.
 
 **After 1.1.6.** KNOWN_ISSUES names all three ways a last payment of zero can reach the library
 mid-season, each of which makes the next draw an opening again.

@@ -37,6 +37,13 @@ An opening of 0%, or one that rounds to nothing on a tiny pot, repeats the same 
 pot can pay (`test/Opening.t.sol`). BullsTF floors its scaled figure at 1 for this reason; a
 first-draw flag in the library would remove the case but changes its interface and bytes.
 
+**The last draws pay out money held back from earlier draws.** Someone who joins only for them
+takes value from the people who stayed. SeasonArc can't see who joined when; a host prices or
+weights late entry (a late price kept out of that draw's pot, a normal-price allowance, or
+loyalty-weighted tickets), and a higher opening share holds less back for the end. On Base
+Sepolia, in a Lettery TF season with no late-entry rule, 60 wallets that bought only in the
+closing draw held 11% of the tickets and took 35% of the payout (README.md, "On a test network").
+
 **A collapsing season steps down once.** The solver does not choose a decline: its search for
 the growth factor starts at flat. When income falls away the payment holds flat where it can, and
 when even a flat payment cannot be carried, the fallback steps it down to the largest flat amount

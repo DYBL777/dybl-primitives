@@ -5,7 +5,7 @@ the game holds now and the number of draws left. Payments rise across the season
 is spent down by the last draw.
 
 **On Base Sepolia, a test network. Not audited.** One copy of SeasonArc 1.1.6 is deployed there,
-its source verified on Basescan, and 17 test contracts from three hosts link it
+its source verified on Basescan, and 23 test contracts from four hosts link it
 ([On a test network](#on-a-test-network)). The design is the author's, arrived at independently;
 how it sits beside related work is in [DESIGN.md](DESIGN.md#related-work). AI was the researcher,
 the economic modeller and the co-developer: writing the Solidity, each step tested and reviewed
@@ -115,9 +115,9 @@ Each host carries a copy of this folder and links the library unedited. Which co
 | Host                  | SeasonArc | `src/SeasonArc.sol` matches commit |
 |-----------------------|-----------|------------------------------------|
 | Lettery TF 1.4.8-preview | 1.1.6     | `23c0357`                          |
-| BullsTF 0.3.8         | 1.1.6     | `23c0357`                          |
+| BullsTF 0.3.16-preview | 1.1.6     | `23c0357`                          |
 | SeedTogether 0.84     | 1.1.6     | `23c0357`                          |
-| Weather TF 0.2.15     | 1.1.6     | `23c0357`                          |
+| Weather TF 0.2.17     | 1.1.6     | `23c0357`                          |
 | SeasonStaking 0.1.0   | 1.1.6     | `23c0357`                          |
 
 1.1.6 changes one comment from 1.1.5 and no code: the instructions are the same, but the metadata
@@ -132,13 +132,14 @@ Base Sepolia (chain 84532), test money only. One copy of SeasonArc 1.1.6 sits at
 [`0xDaD8C9Fa842f77151713FD4a8C7BD52330c14Cb1`](https://sepolia.basescan.org/address/0xDaD8C9Fa842f77151713FD4a8C7BD52330c14Cb1#code),
 its source verified on Basescan (Exact Match): 1,310 runtime bytes, with the instructions hash in
 the table under "Checking a linked copy". Every contract below links that copy: the address is in
-each one's code on chain (checked 25 November 2026).
+each one's code on chain (checked 28 November 2026).
 
 | Host | Contracts | What the runs covered |
 |------|-----------|-----------------------|
-| Lettery TF | 7 games | a full 52-draw season, an empty draw and refused entries, a 100-ticket draw, a dry run of the mainnet deploy |
-| BullsTF | 6 seasons | seasons of 4 to 24 draws: a draw cancelled under the minimum field and reopened, a stalled game closed by anyone, the keeper's report path, late whales against a control |
-| SeedTogether | 3 short seasons and the shipping build | 20-minute draws on Aave's test market: a few large savers, then 500 small ones, then 100 with real Aave rates, an exit from Aave and back, and a late whale; the shipping build deployed, no draws run |
+| Lettery TF | 9 games | a full 52-draw season, an empty draw and refused entries, a 100-ticket draw, a dry run of the mainnet deploy, and two 12-draw seasons at one ticket price, one with 60 newcomers in the closing draw only |
+| BullsTF | 9 seasons | seasons of 4 to 24 draws: a draw cancelled under the minimum field and reopened, a stalled game closed by anyone, the keeper's report path, late money against a control, and three 24-draw seasons testing free tickets for loyal players |
+| SeedTogether | 3 short seasons and the shipping build | 20-minute draws on Aave's test market: a few large savers, then 500 small ones, then 100 with real Aave rates, an exit from Aave and back, and late money; the shipping build deployed, no draws run |
+| Weather TF | 1 season | a 24-draw season, a draw every 30 minutes, opening share 65%: 55 wallets, readings signed and delivered through a Chainlink forwarder with test signers, sealed picks, a thin draw refunded and run again, and late money from draw 16 |
 
 <details>
 <summary>Addresses</summary>
@@ -152,12 +153,18 @@ each one's code on chain (checked 25 November 2026).
 | Lettery TF | game 5, the 52-draw season | [`0x84be463042c62d51b18d6c180904256f8b235299`](https://sepolia.basescan.org/address/0x84be463042c62d51b18d6c180904256f8b235299) |
 | Lettery TF | game 6 | [`0x471f1070d29f89cf4dae555be9a1c800472fe7e5`](https://sepolia.basescan.org/address/0x471f1070d29f89cf4dae555be9a1c800472fe7e5) |
 | Lettery TF | game 7, mainnet dry run | [`0xb5bb5a26bd88dafd66e8015f4ecae9d4c1ae9f9f`](https://sepolia.basescan.org/address/0xb5bb5a26bd88dafd66e8015f4ecae9d4c1ae9f9f) |
+| Lettery TF | game 8 | [`0xb196a38d17755ba8ae793c865c81f09e75ffef52`](https://sepolia.basescan.org/address/0xb196a38d17755ba8ae793c865c81f09e75ffef52) |
+| Lettery TF | game 9, newcomers in the closing draw | [`0x0bbcec9d2776e7c2d646f66961d2b3a0db4bb7cf`](https://sepolia.basescan.org/address/0x0bbcec9d2776e7c2d646f66961d2b3a0db4bb7cf) |
 | BullsTF | season 1 | [`0xcCE03EF2fc52a1dC8b4Ef69eFA0b309AeA6F76F7`](https://sepolia.basescan.org/address/0xcCE03EF2fc52a1dC8b4Ef69eFA0b309AeA6F76F7) |
 | BullsTF | season 2 | [`0xd10FFd586deD5f06D012761Bb3983D3348B17158`](https://sepolia.basescan.org/address/0xd10FFd586deD5f06D012761Bb3983D3348B17158) |
 | BullsTF | season 3 | [`0x8D8661B8D79B2f3965A442705a92E4b48568F245`](https://sepolia.basescan.org/address/0x8D8661B8D79B2f3965A442705a92E4b48568F245) |
 | BullsTF | season 4 | [`0x332509213F0887072D6668A6f1a8C7cB6F2015b6`](https://sepolia.basescan.org/address/0x332509213F0887072D6668A6f1a8C7cB6F2015b6) |
 | BullsTF | season 5, control | [`0xB711677D61cFB4d116C07e1Bba1047f00c2dEf59`](https://sepolia.basescan.org/address/0xB711677D61cFB4d116C07e1Bba1047f00c2dEf59) |
 | BullsTF | season 6, a test build with two extra entry rules, not in BullsTF's repository | [`0x8C0E6Ce55431B7cB90d8d3D875B7a3511a82Ee4A`](https://sepolia.basescan.org/address/0x8C0E6Ce55431B7cB90d8d3D875B7a3511a82Ee4A) |
+| BullsTF | season 7, a test build with free tickets for loyal players, not in BullsTF's repository | [`0x506f0E20Edd862718c0462b3C59a1B834e5d3442`](https://sepolia.basescan.org/address/0x506f0E20Edd862718c0462b3C59a1B834e5d3442) |
+| BullsTF | season 8, a test build with free tickets for loyal players, not in BullsTF's repository | [`0xbD7ACa502981B4CF2D97e6B8fE587603057223cc`](https://sepolia.basescan.org/address/0xbD7ACa502981B4CF2D97e6B8fE587603057223cc) |
+| BullsTF | season 9, a test build with free tickets for loyal players, not in BullsTF's repository | [`0x2D9785a30D7AD69300A8ce1171B0eD01C1FD465b`](https://sepolia.basescan.org/address/0x2D9785a30D7AD69300A8ce1171B0eD01C1FD465b) |
+| Weather TF | season 1 | [`0x1A40A56e8289291215AD878ce86081Cb40005471`](https://sepolia.basescan.org/address/0x1A40A56e8289291215AD878ce86081Cb40005471) |
 | SeedTogether | season 1 | [`0x3aba83f7c795601fb2e7b8e80f4d04fc0d79c210`](https://sepolia.basescan.org/address/0x3aba83f7c795601fb2e7b8e80f4d04fc0d79c210) |
 | SeedTogether | season 2 | [`0xe38a25627bc77784db67dca113aedcfc4c80835a`](https://sepolia.basescan.org/address/0xe38a25627bc77784db67dca113aedcfc4c80835a) |
 | SeedTogether | season 3 | [`0x46decba3d45f9297df8006b2791125bf529470c4`](https://sepolia.basescan.org/address/0x46decba3d45f9297df8006b2791125bf529470c4) |
@@ -166,6 +173,24 @@ each one's code on chain (checked 25 November 2026).
 </details>
 
 What the runs showed for SeasonArc.
+
+From Lettery TF, the host SeasonArc was written for. Its late-entry price, treasury split and
+end-of-season share per ticket are its own, not SeasonArc's:
+
+- **A full 52-draw season.** Game 5 (draws 20 minutes apart, a $5 ticket, a 25% opening, 28
+  scripted wallets and one person buying through the play page) resolved all 52 draws on
+  Chainlink VRF. The keeper was offline for about 5 hours; the missed slot moved the game to the
+  next one and the draw numbers stayed in sequence. After the season the contract held
+  $1,175.000789 against $1,175.000788 owed.
+- **The closing draw takes the pot.** In games 8 and 9 (12 draws at one $5 price, no late-entry
+  price) the closing draw was sized to the whole pot and left it at zero: $29.95 in game 8, and
+  $1,003.44 in game 9, where the pot had been between $132 and $954 before it.
+- **Money arriving only for the closing draw.** In game 9, 40 wallets bought a ticket in every
+  draw (480 tickets) and 60 new wallets bought one ticket each in the closing draw only (60
+  tickets). With no late-entry rule, the 60 held 11% of the tickets and took 35% of what was
+  paid out: $760.81 back on $300, against $1,399.19 back on $2,400 for the 40 who stayed. Two of
+  the 60 won about $350 each. This is one run; it is the case KNOWN_ISSUES describes, and what a
+  host's own entry rules are for.
 
 From BullsTF's seasons:
 
@@ -176,6 +201,31 @@ From BullsTF's seasons:
   $0.22.
 - **The pot was paid out.** Each season that reached its last draw ended with the contract holding
   only rounding once every winner had claimed.
+- **Free tickets for loyal players, on a test build.** Seasons 7 to 9 (24 draws, a $0.10 ticket,
+  openings of 35%, 35% and 50%) ran a modified copy kept outside the repository, giving a free
+  ticket to wallets that keep playing. Late money (wallets that bought only from draw 17) got back
+  $0.74, $0.66 and $0.49 per $1 over the season, against $1.28, $1.54 and $1.48 for loyal wallets
+  in the same late draws. When the late money stopped before the last three draws of season 9, paid
+  tickets fell from 364 to 114 and the prize per paid ticket kept rising, from $0.093 to $0.168.
+  Three seasons with scripted players are one run each: the direction is the finding, not the
+  figures.
+
+
+From Weather TF's 24-draw season (a draw every 30 minutes, an opening share of 65%, a $5 ticket,
+53 scripted wallets and two people buying through the play page). Its tiers, sealed picks and
+readings are its own, not SeasonArc's:
+
+- **A high opening, and a draw total that rose every draw.** All 24 draws resolved on Base
+  Sepolia. The three tiers together paid $121.68 in draw 1 and $405.54 in the last, 3.3 times as
+  much, and the total was higher each draw than the one before. Even the smallest prize paid
+  $11.83 in draw 1 (2.4 times the ticket) and $39.43 in the last (7.9 times).
+- **A thin draw was refunded and run again.** One draw had 20 tickets, under the minimum of 34:
+  every ticket was credited back and the draw reopened at the next slot.
+- **The season ended empty.** After the last winner withdrew the contract held nothing. Players
+  won $5,364.00 of $6,705 played (80%), and the treasury's $1,341.00 went to the beneficiary.
+- **Late money.** Three wallets that began buying at draw 16 spent $675 and won $660 ($0.98 per
+  $1); the 40 wallets that played every draw got $0.75 per $1. With random picks and this few
+  tickets, luck is a large part of that. It is one run.
 
 From SeedTogether's three 12-draw seasons, where SeasonArc sizes each draw from the interest on
 the savers' deposits. SeedTogether's reserve, and its rule that tops a draw up from the reserve to
@@ -192,14 +242,14 @@ the last prize per ticket, are its own, not SeasonArc's:
   sized draw 4 at $58.90; SeedTogether's reserve paid it at $75.42, the same as draw 3, and draw 5
   paid $74.04 (1.8% less) as the reserve ran out. From draw 6 every draw paid more than the one
   before, to $1,238.86 at the close.
-- **A late whale took a small share.** $100,000, more than every other saver together, arrived
+- **Late money took a small share.** $100,000, more than every other saver together, arrived
   19 minutes before season 3's closing draw. Weighted by money and time held (SeedTogether 0.84's
   rule), it held 8.2% of the odds and won $152.95, against about $858 its money earned in that
   time.
 
 The draws, settlement transactions and snags for each host are in that host's own
-`SEPOLIA_TESTS.md`; those repositories are private for now. Weather TF and SeasonStaking carry
-the same source and have not run on a test network yet.
+`SEPOLIA_TESTS.md`; those repositories are private for now. SeasonStaking carries the same source and has not run
+on a test network yet.
 
 ## Season Lab
 
